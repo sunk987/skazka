@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Мега Космос и Голосовая Озвучка</title>
+    <title>Волшебная Раскраска: Мега Космос и Умный Голос</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -291,25 +291,35 @@
             }
         }
 
-        // НОВАЯ ФУНКЦИЯ: ГОЛОСОВАЯ ОЗВУЧКА СЛОВ (Речевой синтезатор)
-        function speakVoice(text) {
+        // УЛУЧШЕННАЯ ФУНКЦИЯ ГОЛОСА: С защитой от обрывания слов
+        function speakVoice(text, force = true) {
             if ('speechSynthesis' in window) {
-                // Если сейчас что-то говорит — прерываем, чтобы звуки не накладывались
-                window.speechSynthesis.cancel(); 
+                // Если force = false и браузер уже говорит, игнорируем новое слово, давая старому договориться
+                if (!force && window.speechSynthesis.speaking) {
+                    return; 
+                }
+
+                // Если важная фраза (force = true), прерываем текущую речь
+                if (force) {
+                    window.speechSynthesis.cancel();
+                }
                 
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ru-RU';
-                utterance.pitch = 1.3; // Чуть более мультяшный/детский тембр голоса
-                utterance.rate = 1.0;  // Обычная скорость
+                utterance.pitch = 1.3; // Мультяшный тембр
+                utterance.rate = 1.05; // Чуть бодрее
                 window.speechSynthesis.speak(utterance);
+                
+                return utterance; // возвращаем для отслеживания окончания
             }
         }
 
-        // Случайная похвала голосом во время мини-игры
+        // Хвалим голосом только если предыдущее слово ЗАВЕРШЕНО
         function speakRandomCheer() {
-            const phrases = ["Ух ты!", "Молодец!", "Круто!", "Здорово!", "Супер!", "Ура!", "Лови!"];
+            const phrases = ["Ух ты!", "Молодец!", "Круто!", "Здорово!", "Супер!", "Ура!", "Лови!", "Класс!"];
             const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            speakVoice(randomPhrase);
+            // Передаем force = false, чтобы слова не обрывали друг друга!
+            speakVoice(randomPhrase, false);
         }
 
         function startBackgroundMusic() {
@@ -472,7 +482,7 @@
                     document.getElementById('main-palette').style.display = 'none';
                     document.getElementById('painting-canvas').style.boxShadow = 'none';
                     
-                    speakVoice("Ура! Ты настоящий супер-художник! Поздравляю!");
+                    speakVoice("Ура! Ты настоящий супер-художник! Поздравляю!", true);
                     setInterval(launchFirework, 600);
                 }, 300);
             }
@@ -523,7 +533,7 @@
 
         // ИГРА СЕРДЕЧКИ
         function startHeartGame() {
-            gameActive = true; score = 0;
+            score = 0;
             document.getElementById('score-counter').innerHTML = "Поймано предметов: <span id='score'>0</span> / 50";
             document.getElementById('game-title').innerHTML = "❤️ Поймай 50 звёзд и сердечек! ✨";
             document.getElementById('game-instruction').innerHTML = "Лови радужные звёзды — они дают сразу +5!";
@@ -532,8 +542,20 @@
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
             
-            speakVoice("Отлично! А теперь поймай пятьдесят звёзд и сердечек!");
-            objectInterval = setInterval(createFlyingObject, 400);
+            // Запускаем озвучку правил
+            const speech = speakVoice("Отлично! А теперь поймай пятьдесят звёзд и сердечек!", true);
+            
+            // ИГРА НЕ НАЧНЕТСЯ, пока голос не договорит фразу!
+            if (speech) {
+                speech.onend = () => {
+                    gameActive = true;
+                    objectInterval = setInterval(createFlyingObject, 400);
+                };
+            } else {
+                // Если вдруг синтезатор не поддерживается, запускаем сразу
+                gameActive = true;
+                objectInterval = setInterval(createFlyingObject, 400);
+            }
         }
 
         function createExplosion(x, y, isMega = false) {
@@ -588,11 +610,11 @@
                 
                 if (isMegaStar) { 
                     score += 5; 
-                    speakVoice("Ого! Супер бонус!");
+                    speakVoice("Ого! Супер бонус!", true); // Бонус прерывает обычные похвалы, так как это важное событие
                 } else { 
                     score++; 
-                    // С шансом 35% хвалим голосом, чтобы не надоедало при каждом тапе
-                    if(Math.random() < 0.35) speakRandomCheer(); 
+                    // Пробуем похвалить (проверка на занятость речи внутри функции)
+                    speakRandomCheer(); 
                 }
                 
                 obj.remove();
@@ -615,13 +637,13 @@
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
             
-            speakVoice("Уровень пройден! Давай теперь раскрасим космическую ракету!");
+            speakVoice("Уровень пройден! Давай теперь раскрасим космическую ракету!", true);
             initPainting();
         }
 
         // ИГРА ЛЯГУШКА
         function startUfoGame() {
-            gameActive = true; score = 0;
+            score = 0;
             document.getElementById('score-counter').innerHTML = "Собрано астероидов: <span id='score'>0</span> / 30";
             document.getElementById('game-title').innerHTML = "🛸 Миссия: Лягушка-Магнит! 🪐";
             document.getElementById('game-instruction').innerHTML = "Води пальцем — лови камни. Осторожно! Не лови КРАСНЫЕ бомбы!";
@@ -631,11 +653,22 @@
             document.getElementById('ufo-catcher').style.display = 'block';
             document.getElementById('score-counter').style.display = 'inline-block';
 
-            speakVoice("Внимание, миссия! Помоги лягушке собрать космические камни. Не трогай красные мины!");
+            // Озвучка правил перед игрой
+            const speech = speakVoice("Внимание, миссия! Помоги лягушке собрать космические камни. Не трогай красные мины!", true);
 
-            window.addEventListener('touchmove', handleUfoTouch, { passive: true });
-            window.addEventListener('mousemove', handleUfoMouse);
-            objectInterval = setInterval(createSpaceObject, 450);
+            // ИГРА ЖДЕТ окончания объяснения правил
+            const launchObjects = () => {
+                gameActive = true;
+                window.addEventListener('touchmove', handleUfoTouch, { passive: true });
+                window.addEventListener('mousemove', handleUfoMouse);
+                objectInterval = setInterval(createSpaceObject, 450);
+            };
+
+            if (speech) {
+                speech.onend = launchObjects;
+            } else {
+                launchObjects();
+            }
         }
 
         function handleUfoTouch(e) { moveUfo(e.touches[0].clientX); }
@@ -679,7 +712,7 @@
                         const ufo = document.getElementById('ufo-catcher');
                         ufo.classList.add('shocked');
                         
-                        speakVoice("Ой ёй ёй!");
+                        speakVoice("Ой ёй ёй!", true); // Крик испуга важнее, поэтому прерывает речь
                         
                         setTimeout(() => { ufo.classList.remove('shocked'); ufoIsShocked = false; }, 1000);
                     } else {
@@ -687,7 +720,8 @@
                         score++;
                         document.getElementById('score').innerText = score;
                         
-                        if(Math.random() < 0.25) speakRandomCheer();
+                        // Пробуем похвалить, не перебивая старые фразы
+                        speakRandomCheer();
                         
                         if (score >= 30 && gameActive) endUfoGame();
                     }
@@ -710,7 +744,7 @@
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
             
-            speakVoice("Ура, победа! А теперь раскрась нашего лунного друга!");
+            speakVoice("Ура, победа! А теперь раскрась нашего лунного друга!", true);
             initPainting();
         }
     </script>
