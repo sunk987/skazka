@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Мега Космос и Умный Голос</title>
+    <title>Волшебная Раскраска: Звёздный Финал</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -117,11 +117,11 @@
             100% { transform: translateY(-130vh) translateX(-30px) rotate(-15deg); }
         }
 
-        /* Частицы взрыва */
-        .particle { position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 6; animation: explodeParticle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+        /* Частицы взрыва (ЗВЁЗДОЧКИ) */
+        .particle { position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 105; animation: explodeParticle 0.7s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
         @keyframes explodeParticle {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--mx), var(--my)) scale(0) rotate(180deg); opacity: 0; }
+            0% { transform: translate(0, 0) scale(1.5) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 5px var(--glow)); }
+            100% { transform: translate(var(--mx), var(--my)) scale(0) rotate(360deg); opacity: 0; }
         }
 
         /* ФЕЙЕРВЕРК */
@@ -136,15 +136,15 @@
             100% { bottom: var(--target-y); transform: scaleY(0.2); opacity: 0; }
         }
 
+        /* Звёздные искры праздничного салюта */
         .fw-spark {
-            position: absolute; width: 8px; height: 8px; border-radius: 50%;
+            position: absolute; width: 24px; height: 24px;
             z-index: 100; pointer-events: none;
             animation: fwSparkle var(--dur) cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
         }
         @keyframes fwSparkle {
-            0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
-            50% { opacity: 1; }
-            100% { transform: translate(var(--mx), var(--my)) translateY(40px) scale(0); opacity: 0; }
+            0% { transform: translate(0, 0) scale(1.8) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 8px var(--spark-color)); }
+            100% { transform: translate(var(--mx), var(--my)) translateY(30px) scale(0) rotate(180deg); opacity: 0; }
         }
 
         /* ИГРА ЛЯГУШКА */
@@ -242,17 +242,17 @@
             <path d="M 150 300 C 150 260, 250 260, 250 300 Z" class="paintable" opacity="0.5"/> 
 
             <g id="the-alien">
-                <ellipse cx="200" cy="220" rx="35" ry="45" class="paintable alien-part" />
+                <ellipse cx="200" cy="220" rx="35" ry="45" class="paintable" />
                 <path d="M 165 220 Q 130 200 140 180" fill="none" stroke="#2c3e50" stroke-width="4" stroke-linecap="round" />
                 <path d="M 235 220 Q 270 200 260 180" fill="none" stroke="#2c3e50" stroke-width="4" stroke-linecap="round" />
-                <circle cx="140" cy="180" r="6" class="paintable alien-part" />
-                <circle cx="260" cy="180" r="6" class="paintable alien-part" />
-                <ellipse cx="200" cy="140" rx="50" ry="35" class="paintable alien-part" />
-                <circle cx="170" cy="135" r="10" class="paintable alien-part" />
+                <circle cx="140" cy="180" r="6" class="paintable" />
+                <circle cx="260" cy="180" r="6" class="paintable" />
+                <ellipse cx="200" cy="140" rx="50" ry="35" class="paintable" />
+                <circle cx="170" cy="135" r="10" class="paintable" />
                 <circle cx="170" cy="135" r="4" fill="#2c3e50" />
-                <circle cx="200" cy="130" r="11" class="paintable alien-part" />
+                <circle cx="200" cy="130" r="11" class="paintable" />
                 <circle cx="200" cy="130" r="4" fill="#2c3e50" />
-                <circle cx="230" cy="135" r="10" class="paintable alien-part" />
+                <circle cx="230" cy="135" r="10" class="paintable" />
                 <circle cx="230" cy="135" r="4" fill="#2c3e50" />
                 <path d="M 185 160 Q 200 172 215 160" fill="none" stroke="#2c3e50" stroke-width="3" stroke-linecap="round" />
             </g>
@@ -281,6 +281,9 @@
         let audioCtx = null;
         let musicInterval = null;
 
+        // Вспомогательный SVG шаблон для разлетающихся звёзд
+        const starSvgHtml = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" /></svg>`;
+
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -291,34 +294,23 @@
             }
         }
 
-        // УЛУЧШЕННАЯ ФУНКЦИЯ ГОЛОСА: С защитой от обрывания слов
         function speakVoice(text, force = true) {
             if ('speechSynthesis' in window) {
-                // Если force = false и браузер уже говорит, игнорируем новое слово, давая старому договориться
-                if (!force && window.speechSynthesis.speaking) {
-                    return; 
-                }
-
-                // Если важная фраза (force = true), прерываем текущую речь
-                if (force) {
-                    window.speechSynthesis.cancel();
-                }
+                if (!force && window.speechSynthesis.speaking) return; 
+                if (force) window.speechSynthesis.cancel();
                 
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ru-RU';
-                utterance.pitch = 1.3; // Мультяшный тембр
-                utterance.rate = 1.05; // Чуть бодрее
+                utterance.pitch = 1.3; 
+                utterance.rate = 1.05; 
                 window.speechSynthesis.speak(utterance);
-                
-                return utterance; // возвращаем для отслеживания окончания
+                return utterance;
             }
         }
 
-        // Хвалим голосом только если предыдущее слово ЗАВЕРШЕНО
         function speakRandomCheer() {
             const phrases = ["Ух ты!", "Молодец!", "Круто!", "Здорово!", "Супер!", "Ура!", "Лови!", "Класс!"];
             const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-            // Передаем force = false, чтобы слова не обрывали друг друга!
             speakVoice(randomPhrase, false);
         }
 
@@ -428,7 +420,7 @@
         }
 
         function initPainting() {
-            document.querySelectorAll('.paintable').forEach(element => {
+            document.querySelectorAll('#level-' + currentLevel + ' .paintable').forEach(element => {
                 element.removeEventListener('click', handlePaint); element.addEventListener('click', handlePaint);
             });
         }
@@ -437,7 +429,7 @@
             initAudio(); e.target.style.fill = selectedColor; playPaintSound();
             if (currentLevel === 1 && e.target.classList.contains('cat-part')) checkCatStatus();
             else if (currentLevel === 2 && e.target.classList.contains('rocket-part')) checkRocketStatus();
-            else if (currentLevel === 3 && e.target.classList.contains('alien-part')) checkAlienStatus();
+            else if (currentLevel === 3) checkFullPictureStatus(); // На 3 уровне проверяем ВСЁ
         }
 
         function checkCatStatus() {
@@ -469,12 +461,14 @@
             }
         }
 
-        function checkAlienStatus() {
+        // НОВАЯ ПРОВЕРКА: Проверяем абсолютно каждый элемент уровня 3
+        function checkFullPictureStatus() {
             let allPainted = true;
-            document.querySelectorAll('.alien-part').forEach(part => {
+            document.querySelectorAll('#level-3 .paintable').forEach(part => {
                 let fill = window.getComputedStyle(part).fill;
                 if (fill === 'rgb(255, 255, 255)' || fill === '#ffffff') allPainted = false;
             });
+            
             if (allPainted) {
                 setTimeout(() => {
                     document.getElementById('game-title').innerHTML = "👑 МЕГА ФИНАЛ: ВСЕЛЕННАЯ ОТКРЫТА! 👑";
@@ -482,13 +476,13 @@
                     document.getElementById('main-palette').style.display = 'none';
                     document.getElementById('painting-canvas').style.boxShadow = 'none';
                     
-                    speakVoice("Ура! Ты настоящий супер-художник! Поздравляю!", true);
+                    speakVoice("Ура! Ты полностью раскрасил всю картину! Ты настоящий супер-художник! Поздравляю!", true);
                     setInterval(launchFirework, 600);
                 }, 300);
             }
         }
 
-        // СИСТЕМА ФЕЙЕРВЕРКОВ
+        // СИСТЕМА ФЕЙЕРВЕРКОВ С РАЗЛЕТАЮЩИМИСЯ ЗВЕЗДАМИ
         function launchFirework() {
             const startX = Math.random() * (window.innerWidth - 100) + 50;
             const targetY = Math.random() * (window.innerHeight * 0.5) + 100;
@@ -507,20 +501,25 @@
 
         function triggerFireworkExplosion(x, y) {
             playFireworkBoom();
-            const sparkCount = 40;
+            const sparkCount = 35;
             const colors = ['#ff4d6d', '#ffeb3b', '#00ffff', '#4ecc6e', '#ff9f1c', '#b5179e', '#ffffff'];
             const randomColorSet = colors[Math.floor(Math.random() * colors.length)];
 
             for (let i = 0; i < sparkCount; i++) {
                 const spark = document.createElement('div');
                 spark.classList.add('fw-spark');
-                spark.style.background = Math.random() > 0.3 ? randomColorSet : colors[Math.floor(Math.random() * colors.length)];
-                spark.style.boxShadow = `0 0 10px ${spark.style.background}`;
-                spark.style.left = x + 'px';
-                spark.style.top = y + 'px';
+                
+                // РАЗЛЕТАЮТСЯ ЗВЁЗДЫ: Вместо пустых блоков создаем SVG звёздочки
+                const chosenColor = Math.random() > 0.3 ? randomColorSet : colors[Math.floor(Math.random() * colors.length)];
+                spark.innerHTML = starSvgHtml;
+                spark.querySelector('polygon').style.fill = chosenColor;
+                spark.style.setProperty('--spark-color', chosenColor);
+                
+                spark.style.left = (x - 12) + 'px';
+                spark.style.top = (y - 12) + 'px';
 
                 const angle = (i * (360 / sparkCount) + Math.random() * 15) * (Math.PI / 180);
-                const speed = Math.random() * 100 + 70;
+                const speed = Math.random() * 120 + 80;
                 
                 spark.style.setProperty('--mx', `${Math.cos(angle) * speed}px`);
                 spark.style.setProperty('--my', `${Math.sin(angle) * speed}px`);
@@ -542,22 +541,18 @@
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
             
-            // Запускаем озвучку правил
             const speech = speakVoice("Отлично! А теперь поймай пятьдесят звёзд и сердечек!", true);
             
-            // ИГРА НЕ НАЧНЕТСЯ, пока голос не договорит фразу!
-            if (speech) {
-                speech.onend = () => {
-                    gameActive = true;
-                    objectInterval = setInterval(createFlyingObject, 400);
-                };
-            } else {
-                // Если вдруг синтезатор не поддерживается, запускаем сразу
+            const runGame = () => {
                 gameActive = true;
                 objectInterval = setInterval(createFlyingObject, 400);
-            }
+            };
+
+            if (speech) speech.onend = runGame;
+            else runGame();
         }
 
+        // Звёздочки разлетаются и при лопании сердечек
         function createExplosion(x, y, isMega = false) {
             const particleCount = isMega ? 15 : 6;
             const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#00b4d8', '#4ecc6e', '#00ffff'];
@@ -565,8 +560,12 @@
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
                 const randColor = colors[Math.floor(Math.random() * colors.length)];
-                particle.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randColor}"/></svg>`;
-                particle.style.left = (x - 10) + 'px'; particle.style.top = (y - 10) + 'px';
+                
+                particle.innerHTML = starSvgHtml;
+                particle.querySelector('polygon').style.fill = randColor;
+                particle.style.setProperty('--glow', randColor);
+
+                particle.style.left = (x - 11) + 'px'; particle.style.top = (y - 11) + 'px';
                 const angle = (i * (360 / particleCount) + Math.random() * 30) * (Math.PI / 180);
                 const distance = isMega ? Math.floor(Math.random() * 80) + 120 : Math.floor(Math.random() * 50) + 80;
                 particle.style.setProperty('--mx', `${Math.cos(angle) * distance}px`);
@@ -610,10 +609,9 @@
                 
                 if (isMegaStar) { 
                     score += 5; 
-                    speakVoice("Ого! Супер бонус!", true); // Бонус прерывает обычные похвалы, так как это важное событие
+                    speakVoice("Ого! Супер бонус!", true);
                 } else { 
                     score++; 
-                    // Пробуем похвалить (проверка на занятость речи внутри функции)
                     speakRandomCheer(); 
                 }
                 
@@ -653,10 +651,8 @@
             document.getElementById('ufo-catcher').style.display = 'block';
             document.getElementById('score-counter').style.display = 'inline-block';
 
-            // Озвучка правил перед игрой
             const speech = speakVoice("Внимание, миссия! Помоги лягушке собрать космические камни. Не трогай красные мины!", true);
 
-            // ИГРА ЖДЕТ окончания объяснения правил
             const launchObjects = () => {
                 gameActive = true;
                 window.addEventListener('touchmove', handleUfoTouch, { passive: true });
@@ -664,11 +660,8 @@
                 objectInterval = setInterval(createSpaceObject, 450);
             };
 
-            if (speech) {
-                speech.onend = launchObjects;
-            } else {
-                launchObjects();
-            }
+            if (speech) speech.onend = launchObjects;
+            else launchObjects();
         }
 
         function handleUfoTouch(e) { moveUfo(e.touches[0].clientX); }
@@ -711,18 +704,13 @@
                         ufoIsShocked = true;
                         const ufo = document.getElementById('ufo-catcher');
                         ufo.classList.add('shocked');
-                        
-                        speakVoice("Ой ёй ёй!", true); // Крик испуга важнее, поэтому прерывает речь
-                        
+                        speakVoice("Ой ёй ёй!", true);
                         setTimeout(() => { ufo.classList.remove('shocked'); ufoIsShocked = false; }, 1000);
                     } else {
                         playCatchSound();
                         score++;
                         document.getElementById('score').innerText = score;
-                        
-                        // Пробуем похвалить, не перебивая старые фразы
                         speakRandomCheer();
-                        
                         if (score >= 30 && gameActive) endUfoGame();
                     }
                 }
@@ -739,12 +727,12 @@
             window.removeEventListener('touchmove', handleUfoTouch); window.removeEventListener('mousemove', handleUfoMouse);
 
             document.getElementById('game-title').innerHTML = "👽 Уровень 3: Лунный Друг! 🛸";
-            document.getElementById('game-instruction').innerHTML = "Космос чист! Скорее раскрась забавного инопланетянина!";
+            document.getElementById('game-instruction').innerHTML = "Раскрась ВСЮ картину целиком, чтобы открыть супер салют!";
             document.getElementById('level-3').style.display = 'block';
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
             
-            speakVoice("Ура, победа! А теперь раскрась нашего лунного друга!", true);
+            speakVoice("Ура, победа! А теперь раскрась нашего лунного друга и всё вокруг него!", true);
             initPainting();
         }
     </script>
