@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Мега Космос и Салют</title>
+    <title>Волшебная Раскраска: Мега Космос и Голосовая Озвучка</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -117,25 +117,14 @@
             100% { transform: translateY(-130vh) translateX(-30px) rotate(-15deg); }
         }
 
-        /* Эффекты похвалы (Комбо текста) */
-        .combo-text {
-            position: absolute; font-weight: 900; font-size: 22px; pointer-events: none; z-index: 7;
-            animation: popText 0.6s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        @keyframes popText {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: scale(1.3) translateY(-40px); opacity: 0; }
-        }
-
-        /* Частицы обычного взрыва */
+        /* Частицы взрыва */
         .particle { position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 6; animation: explodeParticle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
         @keyframes explodeParticle {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--mx), var(--my)) scale(0) rotate(180deg); opacity: 0; }
         }
 
-        /* ФЕЙЕРВЕРК / НАСТОЯЩИЙ САЛЮТ */
+        /* ФЕЙЕРВЕРК */
         .fw-rocket {
             position: absolute; width: 6px; height: 18px; background: #fff; border-radius: 3px;
             z-index: 99; animation: fwFly 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
@@ -288,7 +277,7 @@
         let currentLevel = 1;
         let ufoIsShocked = false;
 
-        // Звуки (Web Audio API)
+        // Звуки и Музыка
         let audioCtx = null;
         let musicInterval = null;
 
@@ -296,9 +285,31 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 startBackgroundMusic();
+                speakVoice("Давай раскрасим волшебного котика!");
             } else if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+        }
+
+        // НОВАЯ ФУНКЦИЯ: ГОЛОСОВАЯ ОЗВУЧКА СЛОВ (Речевой синтезатор)
+        function speakVoice(text) {
+            if ('speechSynthesis' in window) {
+                // Если сейчас что-то говорит — прерываем, чтобы звуки не накладывались
+                window.speechSynthesis.cancel(); 
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ru-RU';
+                utterance.pitch = 1.3; // Чуть более мультяшный/детский тембр голоса
+                utterance.rate = 1.0;  // Обычная скорость
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Случайная похвала голосом во время мини-игры
+        function speakRandomCheer() {
+            const phrases = ["Ух ты!", "Молодец!", "Круто!", "Здорово!", "Супер!", "Ура!", "Лови!"];
+            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            speakVoice(randomPhrase);
         }
 
         function startBackgroundMusic() {
@@ -372,7 +383,6 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         }
 
-        // Космический фон
         function buildSpaceBackground() {
             const container = document.getElementById('space-stars');
             for(let i=0; i<40; i++) {
@@ -462,16 +472,16 @@
                     document.getElementById('main-palette').style.display = 'none';
                     document.getElementById('painting-canvas').style.boxShadow = 'none';
                     
-                    // Запуск бесконечного шоу праздничных фейерверков!
+                    speakVoice("Ура! Ты настоящий супер-художник! Поздравляю!");
                     setInterval(launchFirework, 600);
                 }, 300);
             }
         }
 
-        // НАСТОЯЩАЯ СИСТЕМА ФЕЙЕРВЕРКОВ (Свистящие ракеты и купола искр)
+        // СИСТЕМА ФЕЙЕРВЕРКОВ
         function launchFirework() {
             const startX = Math.random() * (window.innerWidth - 100) + 50;
-            const targetY = Math.random() * (window.innerHeight * 0.5) + 100; // Высота взрыва
+            const targetY = Math.random() * (window.innerHeight * 0.5) + 100;
             
             const rocket = document.createElement('div');
             rocket.classList.add('fw-rocket');
@@ -479,7 +489,6 @@
             rocket.style.setProperty('--target-y', `${targetY}px`);
             document.body.appendChild(rocket);
 
-            // Когда ракета долетает до верхней точки — она взрывается куполом
             setTimeout(() => {
                 rocket.remove();
                 triggerFireworkExplosion(startX, window.innerHeight - targetY);
@@ -488,23 +497,20 @@
 
         function triggerFireworkExplosion(x, y) {
             playFireworkBoom();
-            const sparkCount = 40; // Количество искр в одном салюте
+            const sparkCount = 40;
             const colors = ['#ff4d6d', '#ffeb3b', '#00ffff', '#4ecc6e', '#ff9f1c', '#b5179e', '#ffffff'];
             const randomColorSet = colors[Math.floor(Math.random() * colors.length)];
 
             for (let i = 0; i < sparkCount; i++) {
                 const spark = document.createElement('div');
                 spark.classList.add('fw-spark');
-                
-                // Цвет купола: либо разноцветный, либо одного яркого оттенка
                 spark.style.background = Math.random() > 0.3 ? randomColorSet : colors[Math.floor(Math.random() * colors.length)];
                 spark.style.boxShadow = `0 0 10px ${spark.style.background}`;
                 spark.style.left = x + 'px';
                 spark.style.top = y + 'px';
 
-                // Геометрия взрыва вокруг центральной точки
                 const angle = (i * (360 / sparkCount) + Math.random() * 15) * (Math.PI / 180);
-                const speed = Math.random() * 100 + 70; // Дальность разлёта частиц
+                const speed = Math.random() * 100 + 70;
                 
                 spark.style.setProperty('--mx', `${Math.cos(angle) * speed}px`);
                 spark.style.setProperty('--my', `${Math.sin(angle) * speed}px`);
@@ -513,18 +519,6 @@
                 document.body.appendChild(spark);
                 spark.addEventListener('animationend', () => spark.remove());
             }
-        }
-
-        // КОМБО НАДПИСИ
-        function showComboText(x, y, text = "") {
-            const txt = document.createElement('div');
-            txt.classList.add('combo-text');
-            const words = ['СУПЕР!', 'ВАУ!', 'КРУТО!', 'ОГО!', 'КЛАСС!', 'УХ ТЫ!'];
-            txt.innerText = text || words[Math.floor(Math.random() * words.length)];
-            txt.style.left = x + 'px'; txt.style.top = (y - 30) + 'px';
-            txt.style.color = ['#ffeb3b', '#00ffff', '#ff4d6d', '#4ecc6e', '#ff9f1c'][Math.floor(Math.random() * 5)];
-            document.body.appendChild(txt);
-            txt.addEventListener('animationend', () => txt.remove());
         }
 
         // ИГРА СЕРДЕЧКИ
@@ -537,7 +531,9 @@
             document.getElementById('main-palette').style.display = 'none';
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
-            objectInterval = setInterval(createFlyingObject, 350);
+            
+            speakVoice("Отлично! А теперь поймай пятьдесят звёзд и сердечек!");
+            objectInterval = setInterval(createFlyingObject, 400);
         }
 
         function createExplosion(x, y, isMega = false) {
@@ -590,8 +586,14 @@
                 const clickX = rect.left + rect.width / 2; const clickY = rect.top + rect.height / 2;
                 createExplosion(clickX, clickY, isMegaStar);
                 
-                if (isMegaStar) { score += 5; showComboText(clickX, clickY, "+5 МЕГА!"); }
-                else { score++; showComboText(clickX, clickY); }
+                if (isMegaStar) { 
+                    score += 5; 
+                    speakVoice("Ого! Супер бонус!");
+                } else { 
+                    score++; 
+                    // С шансом 35% хвалим голосом, чтобы не надоедало при каждом тапе
+                    if(Math.random() < 0.35) speakRandomCheer(); 
+                }
                 
                 obj.remove();
                 document.getElementById('score').innerText = score;
@@ -612,6 +614,8 @@
             document.getElementById('level-2').style.display = 'block';
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
+            
+            speakVoice("Уровень пройден! Давай теперь раскрасим космическую ракету!");
             initPainting();
         }
 
@@ -626,6 +630,8 @@
             setTimeout(() => { document.getElementById('level-2').style.display = 'none'; }, 500);
             document.getElementById('ufo-catcher').style.display = 'block';
             document.getElementById('score-counter').style.display = 'inline-block';
+
+            speakVoice("Внимание, миссия! Помоги лягушке собрать космические камни. Не трогай красные мины!");
 
             window.addEventListener('touchmove', handleUfoTouch, { passive: true });
             window.addEventListener('mousemove', handleUfoMouse);
@@ -672,12 +678,17 @@
                         ufoIsShocked = true;
                         const ufo = document.getElementById('ufo-catcher');
                         ufo.classList.add('shocked');
-                        showComboText(itemRect.left, itemRect.top, "БАЗЗЗЗ! ШОК!");
+                        
+                        speakVoice("Ой ёй ёй!");
+                        
                         setTimeout(() => { ufo.classList.remove('shocked'); ufoIsShocked = false; }, 1000);
                     } else {
                         playCatchSound();
                         score++;
                         document.getElementById('score').innerText = score;
+                        
+                        if(Math.random() < 0.25) speakRandomCheer();
+                        
                         if (score >= 30 && gameActive) endUfoGame();
                     }
                 }
@@ -698,6 +709,8 @@
             document.getElementById('level-3').style.display = 'block';
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
+            
+            speakVoice("Ура, победа! А теперь раскрась нашего лунного друга!");
             initPainting();
         }
     </script>
