@@ -21,11 +21,9 @@
             justify-content: flex-start;
             align-items: center;
             box-sizing: border-box;
-            touch-action: none; /* Запрещаем браузеру перехватывать жесты и ломать клики */
         }
 
         .header-area {
-            flex-shrink: 0;
             width: 100%;
             margin-bottom: 5px;
             z-index: 10;
@@ -43,8 +41,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin: 5px 0;
             display: none;
-            opacity: 0;
-            transition: opacity 0.5s;
         }
 
         /* Палитра */
@@ -60,8 +56,6 @@
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             margin-bottom: 15px;
-            flex-shrink: 0;
-            transition: opacity 0.5s ease;
             z-index: 10;
         }
         .color-circle {
@@ -73,7 +67,7 @@
             box-shadow: 0 3px 5px rgba(0,0,0,0.15);
             transition: transform 0.1s;
         }
-        .color-circle:hover, .color-circle.active {
+        .color-circle.active {
             transform: scale(1.1);
             border-color: #333;
         }
@@ -85,10 +79,8 @@
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             position: relative;
-            flex-shrink: 0;
             width: 300px;
             height: 300px;
-            transition: opacity 0.5s ease;
         }
         @media (min-height: 600px) { .canvas-container { width: 340px; height: 340px; } }
         @media (min-height: 700px) { .canvas-container { width: 380px; height: 380px; } }
@@ -107,11 +99,9 @@
             stroke-linejoin: round;
             stroke-linecap: round;
             cursor: pointer;
-            transition: fill 0.2s ease;
-            touch-action: none;
         }
 
-        /* Анимации улетания */
+        /* Анимации исчезновения */
         #the-cat {
             transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
             transform-origin: bottom center;
@@ -126,10 +116,10 @@
 
         #level-2, #level-3 { display: none; }
 
-        /* МИНИ-ИГРА 1: СЕРДЕЧКИ */
+        /* ИГРА 1: СЕРДЕЧКИ */
         .flying-object {
             position: absolute; cursor: pointer; bottom: -80px; z-index: 5;
-            animation: flyUp 4s linear forwards; transition: transform 0.15s ease, opacity 0.15s ease;
+            animation: flyUp 4s linear forwards;
         }
         .heart { width: 55px; height: 55px; }
         .heart::before, .heart::after {
@@ -147,12 +137,11 @@
         }
         .flying-object.popped { animation: none !important; transform: scale(1.9) !important; opacity: 0 !important; pointer-events: none !important; }
 
-        /* МИНИ-ИГРА 2: МАГНИТ */
+        /* ИГРА 2: МАГНИТ (УРОВЕНЬ 3) */
         #ufo-catcher {
             position: absolute; width: 80px; height: 50px;
             bottom: 40px; left: calc(50% - 40px); z-index: 99;
             display: none; pointer-events: none;
-            transition: transform 0.1s linear;
         }
         .asteroid {
             position: absolute; width: 40px; height: 40px; z-index: 98;
@@ -273,12 +262,273 @@
         let objectInterval;
         let score = 0;
         let currentLevel = 1;
-        let ufoX = window.innerWidth / 2;
 
         document.addEventListener("DOMContentLoaded", () => {
             initPalette();
             initPainting();
-            setupUfoControls();
         });
 
         function initPalette() {
+            const colorCircles = document.querySelectorAll('.color-circle');
+            colorCircles.forEach(circle => {
+                // Обычный чистый клик — работает везде безотказно
+                circle.addEventListener('click', (e) => {
+                    colorCircles.forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    selectedColor = e.currentTarget.getAttribute('data-color');
+                });
+            });
+        }
+
+        function initPainting() {
+            const paintableElements = document.querySelectorAll('.paintable');
+            paintableElements.forEach(element => {
+                element.removeEventListener('click', handlePaint);
+                element.addEventListener('click', handlePaint);
+            });
+        }
+
+        function handlePaint(e) {
+            e.target.style.fill = selectedColor;
+            
+            if (currentLevel === 1 && e.target.classList.contains('cat-part')) {
+                checkCatStatus();
+            } else if (currentLevel === 2 && e.target.classList.contains('rocket-part')) {
+                checkRocketStatus();
+            } else if (currentLevel === 3 && e.target.classList.contains('alien-part')) {
+                checkAlienStatus();
+            }
+        }
+
+        function checkCatStatus() {
+            const catParts = document.querySelectorAll('.cat-part');
+            let allPainted = true;
+            catParts.forEach(part => {
+                let currentFill = window.getComputedStyle(part).fill;
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            });
+
+            if (allPainted) {
+                setTimeout(() => {
+                    document.getElementById('the-cat').classList.add('cat-walks-away');
+                    setTimeout(startHeartGame, 2000);
+                }, 300);
+            }
+        }
+
+        function checkRocketStatus() {
+            const rocketParts = document.querySelectorAll('.rocket-part');
+            let allPainted = true;
+            rocketParts.forEach(part => {
+                let currentFill = window.getComputedStyle(part).fill;
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            });
+
+            if (allPainted) {
+                setTimeout(() => {
+                    document.getElementById('the-rocket').classList.add('rocket-flies-away');
+                    setTimeout(startUfoGame, 2000); 
+                }, 300);
+            }
+        }
+
+        function checkAlienStatus() {
+            const alienParts = document.querySelectorAll('.alien-part');
+            let allPainted = true;
+            alienParts.forEach(part => {
+                let currentFill = window.getComputedStyle(part).fill;
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            });
+
+            if (allPainted) {
+                setTimeout(() => {
+                    document.getElementById('game-title').innerHTML = "👑 ВСЕЛЕННАЯ ОТКРЫТА! 👑";
+                    document.getElementById('game-instruction').innerHTML = "Ты раскрасил всех героев! Ты супер-художник! 🛸🌟";
+                }, 300);
+            }
+        }
+
+        // МИНИ-ИГРА 1: СЕРДЕЧКИ
+        function startHeartGame() {
+            gameActive = true;
+            score = 0;
+            document.getElementById('score-counter').innerHTML = "Поймано предметов: <span id='score'>0</span> / 50";
+            document.getElementById('game-title').innerHTML = "❤️ Поймай 50 звёзд и сердечек! ✨";
+            document.getElementById('game-instruction').innerHTML = "Тапай прямо по летящим предметам!";
+            
+            document.getElementById('score-counter').style.display = 'inline-block';
+            document.getElementById('main-palette').style.display = 'none';
+            document.getElementById('painting-canvas').style.opacity = '0';
+            
+            setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
+            objectInterval = setInterval(createFlyingObject, 350);
+        }
+
+        function createFlyingObject() {
+            if (!gameActive) return;
+
+            const isStar = Math.random() > 0.5;
+            const obj = document.createElement('div');
+            obj.classList.add('flying-object');
+
+            const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#ba55d3', '#00b4d8', '#4ecc6e'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            if (isStar) {
+                obj.classList.add('star');
+                obj.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randomColor}" stroke="#fff" stroke-width="1"/></svg>`;
+            } else {
+                obj.classList.add('heart');
+                obj.style.setProperty('--obj-color', randomColor);
+            }
+
+            obj.style.left = Math.floor(Math.random() * 80) + 5 + '%';
+            obj.style.transform = `scale(${(Math.random() * 0.4) + 0.7})`;
+            obj.style.animationDuration = (Math.random() * 1.5) + 2.3 + 's';
+
+            // Лопание предметов
+            const popEvent = (e) => {
+                e.preventDefault();
+                obj.classList.add('popped');
+                score++;
+                document.getElementById('score').innerText = score;
+
+                if (score >= 50 && gameActive) {
+                    endHeartGame();
+                }
+                setTimeout(() => { obj.remove(); }, 200);
+            };
+
+            obj.addEventListener('click', popEvent);
+            obj.addEventListener('touchstart', popEvent, {passive: false});
+            obj.addEventListener('animationend', () => { obj.remove(); });
+            document.body.appendChild(obj);
+        }
+
+        function endHeartGame() {
+            gameActive = false;
+            currentLevel = 2;
+            clearInterval(objectInterval);
+            document.querySelectorAll('.flying-object').forEach(o => o.remove());
+
+            document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета! 🌟";
+            document.getElementById('game-instruction').innerHTML = "Раскрась ракету, чтобы отправить её в космос!";
+            document.getElementById('score-counter').style.display = 'none';
+            
+            document.getElementById('level-2').style.display = 'block';
+            document.getElementById('main-palette').style.display = 'flex';
+            document.getElementById('painting-canvas').style.opacity = '1';
+            
+            initPainting();
+        }
+
+        // МИНИ-ИГРА 2: КОСМИЧЕСКИЙ МАГНИТ (НЛО)
+        function startUfoGame() {
+            gameActive = true;
+            score = 0;
+            document.getElementById('score-counter').innerHTML = "Собрано астероидов: <span id='score'>0</span> / 30";
+            document.getElementById('game-title').innerHTML = "🛸 Миссия: Космический Магнит! 🪐";
+            document.getElementById('game-instruction').innerHTML = "Води пальцем по экрану — лови камни в НЛО!";
+            
+            document.getElementById('main-palette').style.display = 'none';
+            document.getElementById('painting-canvas').style.opacity = '0';
+            setTimeout(() => { document.getElementById('level-2').style.display = 'none'; }, 500);
+
+            document.getElementById('ufo-catcher').style.display = 'block';
+            document.getElementById('score-counter').style.display = 'inline-block';
+
+            // ВКЛЮЧАЕМ слежение за пальцем ТОЛЬКО СЕЙЧАС, чтобы не ломать раскраску
+            window.addEventListener('touchmove', handleUfoTouch, { passive: true });
+            window.addEventListener('mousemove', handleUfoMouse);
+
+            objectInterval = setInterval(createAsteroid, 500);
+        }
+
+        function handleUfoTouch(e) {
+            moveUfo(e.touches[0].clientX);
+        }
+        function handleUfoMouse(e) {
+            moveUfo(e.clientX);
+        }
+
+        function moveUfo(clientX) {
+            let ufoX = clientX;
+            if (ufoX < 40) ufoX = 40;
+            if (ufoX > window.innerWidth - 40) ufoX = window.innerWidth - 40;
+            document.getElementById('ufo-catcher').style.left = (ufoX - 40) + 'px';
+        }
+
+        function createAsteroid() {
+            if (!gameActive) return;
+
+            const asteroid = document.createElement('div');
+            asteroid.classList.add('asteroid');
+
+            const astColors = ['#a0a0a0', '#7a6b58', '#8b8589', '#5c5854'];
+            const randColor = astColors[Math.floor(Math.random() * astColors.length)];
+            
+            asteroid.innerHTML = `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="20" r="16" fill="${randColor}" stroke="#333" stroke-width="2"/><circle cx="13" cy="14" r="3" fill="#333" opacity="0.3"/><circle cx="26" cy="24" r="4" fill="#333" opacity="0.3"/></svg>`;
+            
+            const startX = Math.floor(Math.random() * (window.innerWidth - 60)) + 10;
+            asteroid.style.left = startX + 'px';
+            asteroid.style.animationDuration = (Math.random() * 1) + 2.5 + 's';
+
+            document.body.appendChild(asteroid);
+
+            const checkCollision = setInterval(() => {
+                if (!asteroid.parentNode) {
+                    clearInterval(checkCollision);
+                    return;
+                }
+
+                const astRect = asteroid.getBoundingClientRect();
+                const ufoRect = document.getElementById('ufo-catcher').getBoundingClientRect();
+
+                if (
+                    astRect.bottom >= ufoRect.top &&
+                    astRect.top <= ufoRect.bottom &&
+                    astRect.right >= ufoRect.left &&
+                    astRect.left <= ufoRect.right
+                ) {
+                    asteroid.remove();
+                    clearInterval(checkCollision);
+                    score++;
+                    document.getElementById('score').innerText = score;
+
+                    if (score >= 30 && gameActive) {
+                        endUfoGame();
+                    }
+                }
+            }, 50);
+
+            asteroid.addEventListener('animationend', () => {
+                clearInterval(checkCollision);
+                asteroid.remove();
+            });
+        }
+
+        function endUfoGame() {
+            gameActive = false;
+            currentLevel = 3;
+            clearInterval(objectInterval);
+            document.querySelectorAll('.asteroid').forEach(a => a.remove());
+            document.getElementById('ufo-catcher').style.display = 'none';
+            document.getElementById('score-counter').style.display = 'none';
+
+            // ВЫКЛЮЧАЕМ слежение за движением, возвращаем обычные клики
+            window.removeEventListener('touchmove', handleUfoTouch);
+            window.removeEventListener('mousemove', handleUfoMouse);
+
+            document.getElementById('game-title').innerHTML = "👽 Уровень 3: Лунный Друг! 🛸";
+            document.getElementById('game-instruction').innerHTML = "Путь очищен! Раскрась весёлого пришельца!";
+            
+            document.getElementById('level-3').style.display = 'block';
+            document.getElementById('main-palette').style.display = 'flex';
+            document.getElementById('painting-canvas').style.opacity = '1';
+
+            initPainting();
+        }
+    </script>
+
+</body>
+</html>
