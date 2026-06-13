@@ -283,27 +283,29 @@
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Сразу запускаем фоновую музыку
                 startBackgroundMusic();
+            } else if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
         }
 
         // 1. ФОНОВАЯ МУЗЫКА (Космический перебор)
         function startBackgroundMusic() {
-            const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // Ноты До, Ре, Ми, Соль, Ля
-            let step = 0;
-
+            if (musicInterval) return; // Чтобы не запустить дважды
+            const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; 
+            
             musicInterval = setInterval(() => {
                 if (!audioCtx || audioCtx.state === 'suspended') return;
 
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
 
-                osc.type = 'triangle'; // Мягкий космический звук
-                // Играем случайную приятную ноту из пентатоники
+                osc.type = 'triangle'; 
                 const currentNote = notes[Math.floor(Math.random() * notes.length)];
                 osc.frequency.setValueAtTime(currentNote, audioCtx.currentTime);
 
-                gain.gain.setValueAtTime(0.04, audioCtx.currentTime); // Делаем музыку тихой на фоне
+                gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // Тихая фоновая музыка
                 gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
 
                 osc.connect(gain);
@@ -311,7 +313,22 @@
 
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.8);
-            }, 600); // Темп музыки
+            }, 600);
+        }
+
+        // ЗВУК ДЛЯ РАСКРАСКИ (Нежный щелчок)
+        function playPaintSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
         }
 
         // 2. ЗВУК БУЛЬКАНЬЯ (Для сердечек и звёзд)
@@ -321,11 +338,10 @@
             const gain = audioCtx.createGain();
 
             osc.type = 'sine';
-            // Булькающий эффект за счёт быстрого роста частоты вверх
             osc.frequency.setValueAtTime(300, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
 
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
 
             osc.connect(gain);
@@ -341,11 +357,11 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
 
-            osc.type = 'square'; // Ретро 8-битный звук
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.05); // Прыжок ноты вверх
+            osc.type = 'square'; 
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.05); 
 
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
 
             osc.connect(gain);
@@ -360,18 +376,25 @@
             initPalette();
             initPainting();
 
-            // Включаем звук по первому клику пользователя на экран
-            window.addEventListener('click', initAudio, { once: true });
-            window.addEventListener('touchstart', initAudio, { once: true });
+            // Магическая строчка: при ЛЮБОМ первом тапе на экране включается звук БЕЗ задержек
+            const triggerAudio = () => {
+                initAudio();
+                window.removeEventListener('click', triggerAudio);
+                window.removeEventListener('touchstart', triggerAudio);
+            };
+            window.addEventListener('click', triggerAudio);
+            window.addEventListener('touchstart', triggerAudio);
         });
 
         function initPalette() {
             const colorCircles = document.querySelectorAll('.color-circle');
             colorCircles.forEach(circle => {
                 circle.addEventListener('click', (e) => {
+                    initAudio(); // Подстраховка включения звука
                     colorCircles.forEach(c => c.classList.remove('active'));
                     e.currentTarget.classList.add('active');
                     selectedColor = e.currentTarget.getAttribute('data-color');
+                    playPaintSound();
                 });
             });
         }
@@ -385,7 +408,9 @@
         }
 
         function handlePaint(e) {
+            initAudio(); // Подстраховка включения звука
             e.target.style.fill = selectedColor;
+            playPaintSound();
             
             if (currentLevel === 1 && e.target.classList.contains('cat-part')) {
                 checkCatStatus();
@@ -511,8 +536,6 @@
 
             const popEvent = (e) => {
                 e.preventDefault();
-                
-                // Включаем булькающий звук
                 playBubbleSound();
 
                 const rect = obj.getBoundingClientRect();
@@ -623,7 +646,6 @@
                     asteroid.remove();
                     clearInterval(checkCollision);
                     
-                    // Включаем космический звук поимки астероида
                     playCatchSound();
 
                     score++;
