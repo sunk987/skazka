@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Космические Миссии</title>
+    <title>Волшебная Раскраска: Мега Космос</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #0b0e14 0%, #1a233a 100%);
             margin: 0;
             padding: 10px;
             user-select: none;
@@ -23,150 +23,134 @@
             box-sizing: border-box;
         }
 
-        .header-area {
-            width: 100%;
-            margin-bottom: 5px;
-            z-index: 10;
+        /* Живой космический фон */
+        .space-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
         }
-        h1 { font-size: 20px; color: #333; margin: 5px 0 2px 0; }
-        p { font-size: 13px; color: #666; margin: 0 0 5px 0; }
+        .bg-star {
+            position: absolute; background: white; border-radius: 50%;
+            animation: blink 2s infinite ease-in-out;
+        }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+        .header-area {
+            width: 100%; margin-bottom: 5px; z-index: 10; position: relative;
+        }
+        h1 { font-size: 20px; color: #fff; margin: 5px 0 2px 0; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        p { font-size: 13px; color: #b0c4de; margin: 0 0 5px 0; }
         
         #score-counter {
-            font-size: 18px;
-            font-weight: bold;
-            color: #ff4d6d;
-            background: white;
-            padding: 6px 16px;
-            border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin: 5px 0;
-            display: none;
+            font-size: 18px; font-weight: bold; color: #fff;
+            background: linear-gradient(45deg, #ff4d6d, #ff758f);
+            padding: 6px 20px; border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(255,77,109,0.4);
+            margin: 5px 0; display: none;
         }
 
         /* Палитра */
         .palette {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            width: 100%;
-            max-width: 460px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 15px;
-            z-index: 10;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;
+            width: 100%; max-width: 460px; background: rgba(255, 255, 255, 0.95);
+            padding: 10px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            margin-bottom: 15px; z-index: 10;
         }
         .color-circle {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid #fff;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+            width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+            border: 3px solid #fff; box-shadow: 0 3px 5px rgba(0,0,0,0.2);
             transition: transform 0.1s;
         }
-        .color-circle.active {
-            transform: scale(1.1);
-            border-color: #333;
-        }
+        .color-circle.active { transform: scale(1.15); border-color: #1a233a; }
 
         /* Холст раскрасок */
         .canvas-container {
-            background: white;
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            position: relative;
-            width: 300px;
-            height: 300px;
+            background: white; padding: 10px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); position: relative;
+            width: 300px; height: 300px; z-index: 5; transition: opacity 0.5s;
         }
         @media (min-height: 600px) { .canvas-container { width: 340px; height: 340px; } }
         @media (min-height: 700px) { .canvas-container { width: 380px; height: 380px; } }
 
-        svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 10px;
-        }
-        
+        svg { width: 100%; height: 100%; display: block; border-radius: 10px; }
         .paintable {
-            fill: #ffffff;
-            stroke: #2c3e50;
-            stroke-width: 3;
-            stroke-linejoin: round;
-            stroke-linecap: round;
-            cursor: pointer;
+            fill: #ffffff; stroke: #2c3e50; stroke-width: 3;
+            stroke-linejoin: round; stroke-linecap: round; cursor: pointer;
         }
+
+        /* Огонь из ракеты */
+        #rocket-fire {
+            display: none; fill: url(#fire-gradient);
+            animation: flicker 0.1s infinite alternate;
+        }
+        @keyframes flicker { 0% { transform: scaleY(0.9); } 100% { transform: scaleY(1.1); } }
 
         /* Анимации исчезновения */
-        #the-cat {
-            transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
-            transform-origin: bottom center;
-        }
+        #the-cat { transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease; transform-origin: bottom center; }
         .cat-walks-away { transform: translateX(450px) scale(0.6); opacity: 0; pointer-events: none; }
 
-        #the-rocket {
-            transition: transform 2s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 1.5s ease;
-            transform-origin: center center;
-        }
-        .rocket-flies-away { transform: translateY(-600px) scale(0.5); opacity: 0; pointer-events: none; }
+        #the-rocket { transition: transform 2s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 1.5s ease; transform-origin: center center; }
+        .rocket-flies-away { transform: translateY(-700px) scale(0.4); opacity: 0; pointer-events: none; }
 
         #level-2, #level-3 { display: none; }
 
-        /* ИГРА 1: СЕРДЕЧКИ */
-        .flying-object {
-            position: absolute; cursor: pointer; bottom: -80px; z-index: 5;
-            animation: flyUp 4s linear forwards;
-        }
-        .heart { width: 55px; height: 55px; }
+        /* МИНИ-ИГРЫ */
+        .flying-object { position: absolute; cursor: pointer; bottom: -90px; z-index: 5; animation: flyUp 4s linear forwards; }
+        .heart { width: 55px; height: 55px; filter: drop-shadow(0 0 8px rgba(255,77,109,0.5)); }
         .heart::before, .heart::after {
             content: ""; position: absolute; top: 0; width: 28px; height: 45px;
             border-radius: 28px 28px 0 0; background: var(--obj-color);
         }
         .heart::before { left: 28px; transform: rotate(-45deg); transform-origin: 0 100%; }
         .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
-        .star { width: 50px; height: 50px; }
+        .star { width: 50px; height: 50px; filter: drop-shadow(0 0 8px rgba(255,235,59,0.5)); }
+
+        /* Радужная супер-звезда */
+        .rainbow-star {
+            width: 75px; height: 75px; animation: flyUp 3s linear forwards, rotateStar 2s infinite linear;
+            filter: drop-shadow(0 0 15px #00ffff);
+        }
+        @keyframes rotateStar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         @keyframes flyUp {
             0% { transform: translateY(0) translateX(0) rotate(0deg); }
-            50% { transform: translateY(-50vh) translateX(25px) rotate(8deg); }
-            100% { transform: translateY(-120vh) translateX(-25px) rotate(-8deg); }
+            50% { transform: translateY(-50vh) translateX(30px) rotate(15deg); }
+            100% { transform: translateY(-130vh) translateX(-30px) rotate(-15deg); }
         }
 
-        /* Частицы взрыва (маленькие звёздочки) */
-        .particle {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            pointer-events: none;
-            z-index: 6;
-            animation: explodeParticle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        /* Эффекты похвалы (Комбо текста) */
+        .combo-text {
+            position: absolute; font-weight: 900; font-size: 22px; pointer-events: none; z-index: 7;
+            animation: popText 0.6s ease-out forwards; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
+        @keyframes popText {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.3) translateY(-40px); opacity: 0; }
+        }
+
+        /* Частицы взрыва */
+        .particle { position: absolute; width: 20px; height: 20px; pointer-events: none; z-index: 6; animation: explodeParticle 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
         @keyframes explodeParticle {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--mx), var(--my)) scale(0) rotate(180deg); opacity: 0; }
         }
 
-        /* ИГРА 2: ЛЯГУШКА / МАГНИТ */
+        /* ИГРА ЛЯГУШКА */
         #ufo-catcher {
-            position: absolute; width: 80px; height: 50px;
-            bottom: 120px; left: calc(50% - 40px); z-index: 99;
-            display: none; pointer-events: none;
+            position: absolute; width: 85px; height: 55px; bottom: 120px; left: calc(50% - 42px); z-index: 99; display: none; pointer-events: none;
+            transition: transform 0.1s; filter: drop-shadow(0 0 10px #00b4d8);
         }
-        .asteroid {
-            position: absolute; width: 40px; height: 40px; z-index: 98;
-            animation: fallDown 3.5s linear forwards;
-        }
-        @keyframes fallDown {
-            0% { transform: translateY(-50px) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(360deg); }
-        }
+        #ufo-catcher.shocked { animation: shake 0.1s infinite; filter: drop-shadow(0 0 20px #ff4d6d); opacity: 0.7; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .asteroid { position: absolute; width: 40px; height: 40px; z-index: 98; animation: fallDown 3.5s linear forwards; }
+        .bomb { position: absolute; width: 35px; height: 35px; z-index: 98; animation: fallDown 3s linear forwards; filter: drop-shadow(0 0 8px #ff4d6d); }
+        @keyframes fallDown { 0% { transform: translateY(-50px) rotate(0deg); } 100% { transform: translateY(110vh) rotate(360deg); } }
     </style>
 </head>
 <body>
+
+    <div class="space-bg" id="space-stars"></div>
 
     <div class="header-area">
         <h1 id="game-title">🐱 Уровень 1: Волшебный Кот 🎨</h1>
@@ -215,14 +199,21 @@
         </svg>
 
         <svg viewBox="0 0 400 400" id="level-2">
+            <defs>
+                <linearGradient id="fire-gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffeb3b"/>
+                    <stop offset="50%" stop-color="#ff9f1c"/>
+                    <stop offset="100%" stop-color="#ff4d6d" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
             <rect x="0" y="0" width="400" height="400" class="paintable" />
             <circle cx="70" cy="80" r="35" class="paintable" />
             <path d="M 30 85 Q 70 105 110 85" fill="none" stroke="#2c3e50" stroke-width="3" />
             <circle cx="330" cy="300" r="25" class="paintable" />
             <polygon points="320,70 323,77 332,77 325,82 327,90 320,85 313,90 315,82 308,77 317,77" class="paintable" />
-            <polygon points="80,280 83,287 92,287 85,292 87,300 80,295 73,300 75,292 68,287 77,287" class="paintable" />
             
             <g id="the-rocket">
+                <polygon id="rocket-fire" points="185,280 200,360 215,280 205,310 195,310" />
                 <path d="M 200 80 C 230 140, 240 240, 240 280 L 160 280 C 160 240, 170 140, 200 80 Z" class="paintable rocket-part" />
                 <circle cx="200" cy="180" r="22" class="paintable rocket-part" />
                 <path d="M 160 240 L 120 280 L 160 280 Z" class="paintable rocket-part" />
@@ -234,8 +225,6 @@
         <svg viewBox="0 0 400 400" id="level-3">
             <rect x="0" y="0" width="400" height="400" class="paintable" />
             <ellipse cx="200" cy="380" rx="250" ry="50" class="paintable" /> 
-            <ellipse cx="70" cy="360" rx="20" ry="8" class="paintable" /> 
-            <ellipse cx="320" cy="370" rx="30" ry="10" class="paintable" /> 
             
             <path d="M 120 310 Q 200 280 280 310 Q 200 340 120 310 Z" class="paintable" />
             <path d="M 150 300 C 150 260, 250 260, 250 300 Z" class="paintable" opacity="0.5"/> 
@@ -261,11 +250,10 @@
 
     <div id="ufo-catcher">
         <svg viewBox="0 0 100 60" width="100%" height="100%">
-            <path d="M 15 40 Q 50 15 85 40 Q 50 60 15 40 Z" fill="#00b4d8" stroke="#fff" stroke-width="2"/>
+            <path d="M 15 40 Q 50 15 85 40 Q 50 60 15 40 Z" fill="#4ecc6e" stroke="#fff" stroke-width="2"/>
             <path d="M 30 35 C 30 15, 70 15, 70 35 Z" fill="#fff" opacity="0.6" stroke="#fff" stroke-width="1"/>
+            <circle cx="38" cy="23" r="4" fill="#000"/><circle cx="62" cy="23" r="4" fill="#000"/>
             <circle cx="50" cy="45" r="4" fill="#ffeb3b"/>
-            <circle cx="30" cy="42" r="3" fill="#ff4d6d"/>
-            <circle cx="70" cy="42" r="3" fill="#4ecc6e"/>
         </svg>
     </div>
 
@@ -275,122 +263,108 @@
         let objectInterval;
         let score = 0;
         let currentLevel = 1;
+        let ufoIsShocked = false;
 
-        // Звуковой движок (Web Audio API)
+        // Звуки (Web Audio API)
         let audioCtx = null;
         let musicInterval = null;
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // Сразу запускаем фоновую музыку
                 startBackgroundMusic();
             } else if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        // 1. ФОНОВАЯ МУЗЫКА (Космический перебор)
         function startBackgroundMusic() {
-            if (musicInterval) return; // Чтобы не запустить дважды
+            if (musicInterval) return;
             const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; 
-            
             musicInterval = setInterval(() => {
                 if (!audioCtx || audioCtx.state === 'suspended') return;
-
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-
-                osc.type = 'triangle'; 
-                const currentNote = notes[Math.floor(Math.random() * notes.length)];
-                osc.frequency.setValueAtTime(currentNote, audioCtx.currentTime);
-
-                gain.gain.setValueAtTime(0.03, audioCtx.currentTime); // Тихая фоновая музыка
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(notes[Math.floor(Math.random() * notes.length)], audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
-
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.8);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.8);
             }, 600);
         }
 
-        // ЗВУК ДЛЯ РАСКРАСКИ (Нежный щелчок)
         function playPaintSound() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
         }
 
-        // 2. ЗВУК БУЛЬКАНЬЯ (Для сердечек и звёзд)
-        function playBubbleSound() {
+        function playBubbleSound(isMega = false) {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
-
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = isMega ? 'sawtooth' : 'sine';
+            osc.frequency.setValueAtTime(isMega ? 150 : 300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(isMega ? 1500 : 1200, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(isMega ? 0.25 : 0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         }
 
-        // 3. ЗВУК ЛОВЛИ ПЛАНЕТ / АСТЕРОИДОВ (Блип)
         function playCatchSound() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = 'square'; 
-            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.05); 
-
-            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'square'; osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(850, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.12);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.12);
         }
 
-        // Инициализация при старте страницы
+        function playAlarmSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Создание красивых звезд на фоне
+        function buildSpaceBackground() {
+            const container = document.getElementById('space-stars');
+            for(let i=0; i<40; i++) {
+                const star = document.createElement('div');
+                star.classList.add('bg-star');
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(star);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
+            buildSpaceBackground();
             initPalette();
             initPainting();
-
-            // Магическая строчка: при ЛЮБОМ первом тапе на экране включается звук БЕЗ задержек
-            const triggerAudio = () => {
-                initAudio();
-                window.removeEventListener('click', triggerAudio);
-                window.removeEventListener('touchstart', triggerAudio);
-            };
-            window.addEventListener('click', triggerAudio);
-            window.addEventListener('touchstart', triggerAudio);
+            const triggerAudio = () => { initAudio(); window.removeEventListener('click', triggerAudio); window.removeEventListener('touchstart', triggerAudio); };
+            window.addEventListener('click', triggerAudio); window.addEventListener('touchstart', triggerAudio);
         });
 
         function initPalette() {
             const colorCircles = document.querySelectorAll('.color-circle');
             colorCircles.forEach(circle => {
                 circle.addEventListener('click', (e) => {
-                    initAudio(); // Подстраховка включения звука
+                    initAudio();
                     colorCircles.forEach(c => c.classList.remove('active'));
                     e.currentTarget.classList.add('active');
                     selectedColor = e.currentTarget.getAttribute('data-color');
@@ -400,35 +374,24 @@
         }
 
         function initPainting() {
-            const paintableElements = document.querySelectorAll('.paintable');
-            paintableElements.forEach(element => {
-                element.removeEventListener('click', handlePaint);
-                element.addEventListener('click', handlePaint);
+            document.querySelectorAll('.paintable').forEach(element => {
+                element.removeEventListener('click', handlePaint); element.addEventListener('click', handlePaint);
             });
         }
 
         function handlePaint(e) {
-            initAudio(); // Подстраховка включения звука
-            e.target.style.fill = selectedColor;
-            playPaintSound();
-            
-            if (currentLevel === 1 && e.target.classList.contains('cat-part')) {
-                checkCatStatus();
-            } else if (currentLevel === 2 && e.target.classList.contains('rocket-part')) {
-                checkRocketStatus();
-            } else if (currentLevel === 3 && e.target.classList.contains('alien-part')) {
-                checkAlienStatus();
-            }
+            initAudio(); e.target.style.fill = selectedColor; playPaintSound();
+            if (currentLevel === 1 && e.target.classList.contains('cat-part')) checkCatStatus();
+            else if (currentLevel === 2 && e.target.classList.contains('rocket-part')) checkRocketStatus();
+            else if (currentLevel === 3 && e.target.classList.contains('alien-part')) checkAlienStatus();
         }
 
         function checkCatStatus() {
-            const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
-            catParts.forEach(part => {
-                let currentFill = window.getComputedStyle(part).fill;
-                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            document.querySelectorAll('.cat-part').forEach(part => {
+                let fill = window.getComputedStyle(part).fill;
+                if (fill === 'rgb(255, 255, 255)' || fill === '#ffffff') allPainted = false;
             });
-
             if (allPainted) {
                 setTimeout(() => {
                     document.getElementById('the-cat').classList.add('cat-walks-away');
@@ -438,15 +401,14 @@
         }
 
         function checkRocketStatus() {
-            const rocketParts = document.querySelectorAll('.rocket-part');
             let allPainted = true;
-            rocketParts.forEach(part => {
-                let currentFill = window.getComputedStyle(part).fill;
-                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            document.querySelectorAll('.rocket-part').forEach(part => {
+                let fill = window.getComputedStyle(part).fill;
+                if (fill === 'rgb(255, 255, 255)' || fill === '#ffffff') allPainted = false;
             });
-
             if (allPainted) {
                 setTimeout(() => {
+                    document.getElementById('rocket-fire').style.display = 'block';
                     document.getElementById('the-rocket').classList.add('rocket-flies-away');
                     setTimeout(startUfoGame, 2000); 
                 }, 300);
@@ -454,59 +416,61 @@
         }
 
         function checkAlienStatus() {
-            const alienParts = document.querySelectorAll('.alien-part');
             let allPainted = true;
-            alienParts.forEach(part => {
-                let currentFill = window.getComputedStyle(part).fill;
-                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            document.querySelectorAll('.alien-part').forEach(part => {
+                let fill = window.getComputedStyle(part).fill;
+                if (fill === 'rgb(255, 255, 255)' || fill === '#ffffff') allPainted = false;
             });
-
             if (allPainted) {
                 setTimeout(() => {
-                    document.getElementById('game-title').innerHTML = "👑 ВСЕЛЕННАЯ ОТКРЫТА! 👑";
-                    document.getElementById('game-instruction').innerHTML = "Ты раскрасил всех героев! Ты супер-художник! 🛸🌟";
+                    document.getElementById('game-title').innerHTML = "👑 МЕГА ФИНАЛ: ВСЕЛЕННАЯ ОТКРЫТА! 👑";
+                    document.getElementById('game-instruction').innerHTML = "Ты — настоящий космический супер-художник! 🛸🌟";
+                    setInterval(() => {
+                        createExplosion(Math.random() * window.innerWidth, Math.random() * window.innerHeight, true);
+                        playBubbleSound(Math.random() > 0.5);
+                    }, 250);
                 }, 300);
             }
         }
 
-        // МИНИ-ИГРА 1: СЕРДЕЧКИ
+        // КОМБО НАДПИСИ
+        function showComboText(x, y, text = "") {
+            const txt = document.createElement('div');
+            txt.classList.add('combo-text');
+            const words = ['СУПЕР!', 'ВАУ!', 'КРУТО!', 'ОГО!', 'КЛАСС!', 'УХ ТЫ!'];
+            txt.innerText = text || words[Math.floor(Math.random() * words.length)];
+            txt.style.left = x + 'px'; txt.style.top = (y - 30) + 'px';
+            txt.style.color = ['#ffeb3b', '#00ffff', '#ff4d6d', '#4ecc6e', '#ff9f1c'][Math.floor(Math.random() * 5)];
+            document.body.appendChild(txt);
+            txt.addEventListener('animationend', () => txt.remove());
+        }
+
+        // ИГРА СЕРДЕЧКИ
         function startHeartGame() {
-            gameActive = true;
-            score = 0;
+            gameActive = true; score = 0;
             document.getElementById('score-counter').innerHTML = "Поймано предметов: <span id='score'>0</span> / 50";
             document.getElementById('game-title').innerHTML = "❤️ Поймай 50 звёзд и сердечек! ✨";
-            document.getElementById('game-instruction').innerHTML = "Тапай прямо по летящим предметам!";
-            
+            document.getElementById('game-instruction').innerHTML = "Лови радужные звёзды — они дают сразу +5!";
             document.getElementById('score-counter').style.display = 'inline-block';
             document.getElementById('main-palette').style.display = 'none';
             document.getElementById('painting-canvas').style.opacity = '0';
-            
             setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
             objectInterval = setInterval(createFlyingObject, 350);
         }
 
-        function createExplosion(x, y) {
-            const particleCount = 6;
-            const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#00b4d8', '#4ecc6e'];
-
+        function createExplosion(x, y, isMega = false) {
+            const particleCount = isMega ? 15 : 6;
+            const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#00b4d8', '#4ecc6e', '#00ffff'];
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
-                
                 const randColor = colors[Math.floor(Math.random() * colors.length)];
                 particle.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randColor}"/></svg>`;
-                
-                particle.style.left = (x - 10) + 'px';
-                particle.style.top = (y - 10) + 'px';
-                
+                particle.style.left = (x - 10) + 'px'; particle.style.top = (y - 10) + 'px';
                 const angle = (i * (360 / particleCount) + Math.random() * 30) * (Math.PI / 180);
-                const distance = Math.floor(Math.random() * 50) + 80;
-                const mx = Math.cos(angle) * distance;
-                const my = Math.sin(angle) * distance;
-                
-                particle.style.setProperty('--mx', `${mx}px`);
-                particle.style.setProperty('--my', `${my}px`);
-                
+                const distance = isMega ? Math.floor(Math.random() * 80) + 120 : Math.floor(Math.random() * 50) + 80;
+                particle.style.setProperty('--mx', `${Math.cos(angle) * distance}px`);
+                particle.style.setProperty('--my', `${Math.sin(angle) * distance}px`);
                 document.body.appendChild(particle);
                 particle.addEventListener('animationend', () => particle.remove());
             }
@@ -514,176 +478,148 @@
 
         function createFlyingObject() {
             if (!gameActive) return;
-
-            const isStar = Math.random() > 0.5;
+            const rand = Math.random();
             const obj = document.createElement('div');
             obj.classList.add('flying-object');
+            
+            let isMegaStar = rand < 0.08; // 8% шанс на супер-радужную звезду
+            let isStar = rand > 0.54;
 
-            const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#ba55d3', '#00b4d8', '#4ecc6e'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-            if (isStar) {
+            if (isMegaStar) {
+                obj.classList.add('rainbow-star');
+                obj.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="url(#rainbow)" stroke="#fff" stroke-width="1.5"/><defs><linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff0000"/><stop offset="20%" stop-color="#ff7f00"/><stop offset="40%" stop-color="#ffff00"/><stop offset="60%" stop-color="#00ff00"/><stop offset="80%" stop-color="#0000ff"/><stop offset="100%" stop-color="#8b00ff"/></linearGradient></defs></svg>`;
+            } else if (isStar) {
                 obj.classList.add('star');
+                const randomColor = ['#ffeb3b', '#ff9f1c', '#00ffff', '#4ecc6e'][Math.floor(Math.random() * 4)];
                 obj.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randomColor}" stroke="#fff" stroke-width="1"/></svg>`;
             } else {
                 obj.classList.add('heart');
-                obj.style.setProperty('--obj-color', randomColor);
+                obj.style.setProperty('--obj-color', ['#ff4d6d', '#ff758f', '#b5179e'][Math.floor(Math.random() * 3)]);
             }
 
             obj.style.left = Math.floor(Math.random() * 80) + 5 + '%';
-            obj.style.transform = `scale(${(Math.random() * 0.4) + 0.7})`;
-            obj.style.animationDuration = (Math.random() * 1.5) + 2.3 + 's';
+            if (!isMegaStar) obj.style.transform = `scale(${(Math.random() * 0.4) + 0.7})`;
+            obj.style.animationDuration = isMegaStar ? '2.5s' : ((Math.random() * 1.5) + 2.3 + 's');
 
             const popEvent = (e) => {
                 e.preventDefault();
-                playBubbleSound();
-
+                playBubbleSound(isMegaStar);
                 const rect = obj.getBoundingClientRect();
-                const clickX = rect.left + rect.width / 2;
-                const clickY = rect.top + rect.height / 2;
+                const clickX = rect.left + rect.width / 2; const clickY = rect.top + rect.height / 2;
+                createExplosion(clickX, clickY, isMegaStar);
                 
-                createExplosion(clickX, clickY);
-
+                if (isMegaStar) { score += 5; showComboText(clickX, clickY, "+5 МЕГА!"); }
+                else { score++; showComboText(clickX, clickY); }
+                
                 obj.remove();
-                score++;
                 document.getElementById('score').innerText = score;
-
-                if (score >= 50 && gameActive) {
-                    endHeartGame();
-                }
+                if (score >= 50 && gameActive) endHeartGame();
             };
 
-            obj.addEventListener('click', popEvent);
-            obj.addEventListener('touchstart', popEvent, {passive: false});
-            obj.addEventListener('animationend', () => { obj.remove(); });
+            obj.addEventListener('click', popEvent); obj.addEventListener('touchstart', popEvent, {passive: false});
+            obj.addEventListener('animationend', () => obj.remove());
             document.body.appendChild(obj);
         }
 
         function endHeartGame() {
-            gameActive = false;
-            currentLevel = 2;
-            clearInterval(objectInterval);
+            gameActive = false; currentLevel = 2; clearInterval(objectInterval);
             document.querySelectorAll('.flying-object').forEach(o => o.remove());
-
             document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета! 🌟";
-            document.getElementById('game-instruction').innerHTML = "Раскрась ракету, чтобы отправить её в космос!";
+            document.getElementById('game-instruction').innerHTML = "Раскрась ракету, чтобы отправить её в дальний космос!";
             document.getElementById('score-counter').style.display = 'none';
-            
             document.getElementById('level-2').style.display = 'block';
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
-            
             initPainting();
         }
 
-        // МИНИ-ИГРА 2: КОСМИЧЕСКИЙ МАГНИТ (НЛО)
+        // ИГРА ЛЯГУШКА
         function startUfoGame() {
-            gameActive = true;
-            score = 0;
+            gameActive = true; score = 0;
             document.getElementById('score-counter').innerHTML = "Собрано астероидов: <span id='score'>0</span> / 30";
-            document.getElementById('game-title').innerHTML = "🛸 Миссия: Космический Магнит! 🪐";
-            document.getElementById('game-instruction').innerHTML = "Води пальцем по экрану — лови камни в НЛО!";
-            
+            document.getElementById('game-title').innerHTML = "🛸 Миссия: Лягушка-Магнит! 🪐";
+            document.getElementById('game-instruction').innerHTML = "Води пальцем — лови камни. Осторожно! Не лови КРАСНЫЕ бомбы!";
             document.getElementById('main-palette').style.display = 'none';
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => { document.getElementById('level-2').style.display = 'none'; }, 500);
-
             document.getElementById('ufo-catcher').style.display = 'block';
             document.getElementById('score-counter').style.display = 'inline-block';
 
             window.addEventListener('touchmove', handleUfoTouch, { passive: true });
             window.addEventListener('mousemove', handleUfoMouse);
-
-            objectInterval = setInterval(createAsteroid, 500);
+            objectInterval = setInterval(createSpaceObject, 450);
         }
 
-        function handleUfoTouch(e) {
-            moveUfo(e.touches[0].clientX);
-        }
-        function handleUfoMouse(e) {
-            moveUfo(e.clientX);
-        }
-
+        function handleUfoTouch(e) { moveUfo(e.touches[0].clientX); }
+        function handleUfoMouse(e) { moveUfo(e.clientX); }
         function moveUfo(clientX) {
+            if (ufoIsShocked) return; // Если под током — не двигаемся
             let ufoX = clientX;
-            if (ufoX < 40) ufoX = 40;
-            if (ufoX > window.innerWidth - 40) ufoX = window.innerWidth - 40;
-            document.getElementById('ufo-catcher').style.left = (ufoX - 40) + 'px';
+            if (ufoX < 40) ufoX = 40; if (ufoX > window.innerWidth - 40) ufoX = window.innerWidth - 40;
+            document.getElementById('ufo-catcher').style.left = (ufoX - 42) + 'px';
         }
 
-        function createAsteroid() {
+        function createSpaceObject() {
             if (!gameActive) return;
-
-            const asteroid = document.createElement('div');
-            asteroid.classList.add('asteroid');
-
-            const astColors = ['#a0a0a0', '#7a6b58', '#8b8589', '#5c5854'];
-            const randColor = astColors[Math.floor(Math.random() * astColors.length)];
+            const isBomb = Math.random() < 0.25; // 25% шанс создания мины-бомбы
+            const item = document.createElement('div');
             
-            asteroid.innerHTML = `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="20" r="16" fill="${randColor}" stroke="#333" stroke-width="2"/><circle cx="13" cy="14" r="3" fill="#333" opacity="0.3"/><circle cx="26" cy="24" r="4" fill="#333" opacity="0.3"/></svg>`;
-            
-            const startX = Math.floor(Math.random() * (window.innerWidth - 60)) + 10;
-            asteroid.style.left = startX + 'px';
-            asteroid.style.animationDuration = (Math.random() * 1) + 2.5 + 's';
+            if (isBomb) {
+                item.classList.add('bomb');
+                item.innerHTML = `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="#ff4d6d" stroke="#fff" stroke-width="2"/><line x1="20" y1="2" x2="20" y2="38" stroke="#fff" stroke-width="2"/><line x1="2" y1="20" x2="38" y2="20" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="5" fill="#fff"/></svg>`;
+            } else {
+                item.classList.add('asteroid');
+                const colors = ['#a0a0a0', '#7a6b58', '#5c5854'];
+                item.innerHTML = `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="${colors[Math.floor(Math.random()*3)]}" stroke="#333" stroke-width="2"/><circle cx="13" cy="14" r="3" fill="#333" opacity="0.3"/><circle cx="25" cy="23" r="4" fill="#333" opacity="0.3"/></svg>`;
+            }
 
-            document.body.appendChild(asteroid);
+            item.style.left = (Math.random() * (window.innerWidth - 60) + 10) + 'px';
+            item.style.animationDuration = (Math.random() * 1 + 2.2) + 's';
+            document.body.appendChild(item);
 
             const checkCollision = setInterval(() => {
-                if (!asteroid.parentNode) {
-                    clearInterval(checkCollision);
-                    return;
-                }
-
-                const astRect = asteroid.getBoundingClientRect();
+                if (!item.parentNode) { clearInterval(checkCollision); return; }
+                const itemRect = item.getBoundingClientRect();
                 const ufoRect = document.getElementById('ufo-catcher').getBoundingClientRect();
 
-                if (
-                    astRect.bottom >= ufoRect.top &&
-                    astRect.top <= ufoRect.bottom &&
-                    astRect.right >= ufoRect.left &&
-                    astRect.left <= ufoRect.right
-                ) {
-                    asteroid.remove();
-                    clearInterval(checkCollision);
+                if (itemRect.bottom >= ufoRect.top && itemRect.top <= ufoRect.bottom && itemRect.right >= ufoRect.left && itemRect.left <= ufoRect.right) {
+                    item.remove(); clearInterval(checkCollision);
                     
-                    playCatchSound();
-
-                    score++;
-                    document.getElementById('score').innerText = score;
-
-                    if (score >= 30 && gameActive) {
-                        endUfoGame();
+                    if (isBomb) {
+                        // Поймали бомбу — шок лягушки!
+                        playAlarmSound();
+                        ufoIsShocked = true;
+                        const ufo = document.getElementById('ufo-catcher');
+                        ufo.classList.add('shocked');
+                        showComboText(itemRect.left, itemRect.top, "БАЗЗЗЗ! ШОК!");
+                        setTimeout(() => { ufo.classList.remove('shocked'); ufoIsShocked = false; }, 1000);
+                    } else {
+                        // Поймали полезный астероид
+                        playCatchSound();
+                        score++;
+                        document.getElementById('score').innerText = score;
+                        if (score >= 30 && gameActive) endUfoGame();
                     }
                 }
             }, 50);
 
-            asteroid.addEventListener('animationend', () => {
-                clearInterval(checkCollision);
-                asteroid.remove();
-            });
+            item.addEventListener('animationend', () => { clearInterval(checkCollision); item.remove(); });
         }
 
         function endUfoGame() {
-            gameActive = false;
-            currentLevel = 3;
-            clearInterval(objectInterval);
-            document.querySelectorAll('.asteroid').forEach(a => a.remove());
+            gameActive = false; currentLevel = 3; clearInterval(objectInterval);
+            document.querySelectorAll('.asteroid, .bomb').forEach(a => a.remove());
             document.getElementById('ufo-catcher').style.display = 'none';
             document.getElementById('score-counter').style.display = 'none';
-
-            window.removeEventListener('touchmove', handleUfoTouch);
-            window.removeEventListener('mousemove', handleUfoMouse);
+            window.removeEventListener('touchmove', handleUfoTouch); window.removeEventListener('mousemove', handleUfoMouse);
 
             document.getElementById('game-title').innerHTML = "👽 Уровень 3: Лунный Друг! 🛸";
-            document.getElementById('game-instruction').innerHTML = "Путь очищен! Раскрась весёлого пришельца!";
-            
+            document.getElementById('game-instruction').innerHTML = "Космос чист! Скорее раскрась забавного инопланетянина!";
             document.getElementById('level-3').style.display = 'block';
             document.getElementById('main-palette').style.display = 'flex';
             document.getElementById('painting-canvas').style.opacity = '1';
-
             initPainting();
         }
     </script>
-
 </body>
 </html>
