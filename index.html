@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Звёздный Финал</title>
+    <title>Волшебная Раскраска: Мега Звёздный Салют</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -117,7 +117,7 @@
             100% { transform: translateY(-130vh) translateX(-30px) rotate(-15deg); }
         }
 
-        /* Частицы взрыва (ЗВЁЗДОЧКИ) */
+        /* Частицы взрыва (ЗВЁЗДОЧКИ в игре) */
         .particle { position: absolute; width: 22px; height: 22px; pointer-events: none; z-index: 105; animation: explodeParticle 0.7s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
         @keyframes explodeParticle {
             0% { transform: translate(0, 0) scale(1.5) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 5px var(--glow)); }
@@ -136,15 +136,25 @@
             100% { bottom: var(--target-y); transform: scaleY(0.2); opacity: 0; }
         }
 
-        /* Звёздные искры праздничного салюта */
+        /* Крупные звёзды салюта первого уровня распада */
         .fw-spark {
-            position: absolute; width: 24px; height: 24px;
-            z-index: 100; pointer-events: none;
+            position: absolute; width: 24px; height: 24px; z-index: 100; pointer-events: none;
             animation: fwSparkle var(--dur) cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
         }
         @keyframes fwSparkle {
-            0% { transform: translate(0, 0) scale(1.8) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 8px var(--spark-color)); }
-            100% { transform: translate(var(--mx), var(--my)) translateY(30px) scale(0) rotate(180deg); opacity: 0; }
+            0% { transform: translate(0, 0) scale(2) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 8px var(--spark-color)); }
+            80% { opacity: 1; }
+            100% { transform: translate(var(--mx), var(--my)) scale(0.8) rotate(270deg); opacity: 1; }
+        }
+
+        /* Мелкие осколки звёзд второго уровня распада */
+        .fw-mini-shrapnel {
+            position: absolute; width: 12px; height: 12px; z-index: 101; pointer-events: none;
+            animation: miniFly var(--dur) ease-out forwards;
+        }
+        @keyframes miniFly {
+            0% { transform: translate(0, 0) scale(1.5); opacity: 1; filter: drop-shadow(0 0 4px var(--mini-color)); }
+            100% { transform: translate(var(--mmx), var(--mmy)) translateY(15px) scale(0); opacity: 0; }
         }
 
         /* ИГРА ЛЯГУШКА */
@@ -281,7 +291,6 @@
         let audioCtx = null;
         let musicInterval = null;
 
-        // Вспомогательный SVG шаблон для разлетающихся звёзд
         const starSvgHtml = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" /></svg>`;
 
         function initAudio() {
@@ -429,7 +438,7 @@
             initAudio(); e.target.style.fill = selectedColor; playPaintSound();
             if (currentLevel === 1 && e.target.classList.contains('cat-part')) checkCatStatus();
             else if (currentLevel === 2 && e.target.classList.contains('rocket-part')) checkRocketStatus();
-            else if (currentLevel === 3) checkFullPictureStatus(); // На 3 уровне проверяем ВСЁ
+            else if (currentLevel === 3) checkFullPictureStatus();
         }
 
         function checkCatStatus() {
@@ -461,7 +470,6 @@
             }
         }
 
-        // НОВАЯ ПРОВЕРКА: Проверяем абсолютно каждый элемент уровня 3
         function checkFullPictureStatus() {
             let allPainted = true;
             document.querySelectorAll('#level-3 .paintable').forEach(part => {
@@ -482,7 +490,7 @@
             }
         }
 
-        // СИСТЕМА ФЕЙЕРВЕРКОВ С РАЗЛЕТАЮЩИМИСЯ ЗВЕЗДАМИ
+        // МЕГА ФЕЙЕРВЕРК: ЗВЁЗДЫ РАСПАДАЮТСЯ НА МНОЖЕСТВО ЧАСТЕЙ
         function launchFirework() {
             const startX = Math.random() * (window.innerWidth - 100) + 50;
             const targetY = Math.random() * (window.innerHeight * 0.5) + 100;
@@ -501,7 +509,7 @@
 
         function triggerFireworkExplosion(x, y) {
             playFireworkBoom();
-            const sparkCount = 35;
+            const sparkCount = 20; // Количество крупных звёзд первого круга
             const colors = ['#ff4d6d', '#ffeb3b', '#00ffff', '#4ecc6e', '#ff9f1c', '#b5179e', '#ffffff'];
             const randomColorSet = colors[Math.floor(Math.random() * colors.length)];
 
@@ -509,7 +517,6 @@
                 const spark = document.createElement('div');
                 spark.classList.add('fw-spark');
                 
-                // РАЗЛЕТАЮТСЯ ЗВЁЗДЫ: Вместо пустых блоков создаем SVG звёздочки
                 const chosenColor = Math.random() > 0.3 ? randomColorSet : colors[Math.floor(Math.random() * colors.length)];
                 spark.innerHTML = starSvgHtml;
                 spark.querySelector('polygon').style.fill = chosenColor;
@@ -518,15 +525,51 @@
                 spark.style.left = (x - 12) + 'px';
                 spark.style.top = (y - 12) + 'px';
 
-                const angle = (i * (360 / sparkCount) + Math.random() * 15) * (Math.PI / 180);
-                const speed = Math.random() * 120 + 80;
+                const angle = (i * (360 / sparkCount) + Math.random() * 10) * (Math.PI / 180);
+                const speed = Math.random() * 90 + 60;
+                const duration = Math.random() * 0.2 + 0.5; // Время до распада звёзд
+
+                const mx = Math.cos(angle) * speed;
+                const my = Math.sin(angle) * speed;
                 
-                spark.style.setProperty('--mx', `${Math.cos(angle) * speed}px`);
-                spark.style.setProperty('--my', `${Math.sin(angle) * speed}px`);
-                spark.style.setProperty('--dur', `${Math.random() * 0.4 + 0.8}s`);
+                spark.style.setProperty('--mx', `${mx}px`);
+                spark.style.setProperty('--my', `${my}px`);
+                spark.style.setProperty('--dur', `${duration}s`);
 
                 document.body.appendChild(spark);
-                spark.addEventListener('animationend', () => spark.remove());
+
+                // ЦЕПНАЯ РЕАКЦИЯ: В конце анимации крупная звезда взрывается на много мелких частей
+                setTimeout(() => {
+                    const finalX = x + mx;
+                    const finalY = y + my;
+                    triggerMiniShrapnel(finalX, finalY, chosenColor);
+                    spark.remove();
+                }, duration * 1000);
+            }
+        }
+
+        // Взрыв отдельной звёздочки на мелкие осколки
+        function triggerMiniShrapnel(x, y, color) {
+            const subShardCount = 6; // Каждая звезда распадается еще на 6 частей!
+            for (let j = 0; j < subShardCount; j++) {
+                const mini = document.createElement('div');
+                mini.classList.add('fw-mini-shrapnel');
+                mini.innerHTML = starSvgHtml;
+                mini.querySelector('polygon').style.fill = color;
+                mini.style.setProperty('--mini-color', color);
+                
+                mini.style.left = (x - 6) + 'px';
+                mini.style.top = (y - 6) + 'px';
+
+                const subAngle = (j * (360 / subShardCount) + Math.random() * 45) * (Math.PI / 180);
+                const subSpeed = Math.random() * 40 + 20;
+
+                mini.style.setProperty('--mmx', `${Math.cos(subAngle) * subSpeed}px`);
+                mini.style.setProperty('--mmy', `${Math.sin(subAngle) * subSpeed}px`);
+                mini.style.setProperty('--dur', `${Math.random() * 0.3 + 0.4}s`);
+
+                document.body.appendChild(mini);
+                mini.addEventListener('animationend', () => mini.remove());
             }
         }
 
@@ -541,7 +584,7 @@
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => { document.getElementById('level-1').style.display = 'none'; }, 500);
             
-            const speech = speakVoice("Отлично! А теперь поймай пятьдесят звёзд и сердечек!", true);
+            const speech = speakVoice("Отлично! А теперь поймай Cor_пятьдесят звёзд и сердечек!", true);
             
             const runGame = () => {
                 gameActive = true;
@@ -552,7 +595,6 @@
             else runGame();
         }
 
-        // Звёздочки разлетаются и при лопании сердечек
         function createExplosion(x, y, isMega = false) {
             const particleCount = isMega ? 15 : 6;
             const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#00b4d8', '#4ecc6e', '#00ffff'];
