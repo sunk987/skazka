@@ -150,7 +150,7 @@
             100% { transform: translate(var(--mx), var(--my)) scale(0) rotate(180deg); opacity: 0; }
         }
 
-        /* ИГРА 2: ЛЯГУШКА / МАГНИТ — Подняли повыше от края экрана */
+        /* ИГРА 2: ЛЯГУШКА / МАГНИТ */
         #ufo-catcher {
             position: absolute; width: 80px; height: 50px;
             bottom: 120px; left: calc(50% - 40px); z-index: 99;
@@ -276,9 +276,93 @@
         let score = 0;
         let currentLevel = 1;
 
+        // Звуковой движок (Web Audio API)
+        let audioCtx = null;
+        let musicInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                startBackgroundMusic();
+            }
+        }
+
+        // 1. ФОНОВАЯ МУЗЫКА (Космический перебор)
+        function startBackgroundMusic() {
+            const notes = [261.63, 293.66, 329.63, 392.00, 440.00]; // Ноты До, Ре, Ми, Соль, Ля
+            let step = 0;
+
+            musicInterval = setInterval(() => {
+                if (!audioCtx || audioCtx.state === 'suspended') return;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle'; // Мягкий космический звук
+                // Играем случайную приятную ноту из пентатоники
+                const currentNote = notes[Math.floor(Math.random() * notes.length)];
+                osc.frequency.setValueAtTime(currentNote, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime); // Делаем музыку тихой на фоне
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            }, 600); // Темп музыки
+        }
+
+        // 2. ЗВУК БУЛЬКАНЬЯ (Для сердечек и звёзд)
+        function playBubbleSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            // Булькающий эффект за счёт быстрого роста частоты вверх
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // 3. ЗВУК ЛОВЛИ ПЛАНЕТ / АСТЕРОИДОВ (Блип)
+        function playCatchSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'square'; // Ретро 8-битный звук
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.05); // Прыжок ноты вверх
+
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        // Инициализация при старте страницы
         document.addEventListener("DOMContentLoaded", () => {
             initPalette();
             initPainting();
+
+            // Включаем звук по первому клику пользователя на экран
+            window.addEventListener('click', initAudio, { once: true });
+            window.addEventListener('touchstart', initAudio, { once: true });
         });
 
         function initPalette() {
@@ -376,7 +460,6 @@
             objectInterval = setInterval(createFlyingObject, 350);
         }
 
-        // Создание эффекта взрыва (разлетающиеся звёздочки)
         function createExplosion(x, y) {
             const particleCount = 6;
             const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#00b4d8', '#4ecc6e'];
@@ -385,15 +468,12 @@
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
                 
-                // Рисуем маленькую звёздочку внутри частицы
                 const randColor = colors[Math.floor(Math.random() * colors.length)];
                 particle.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randColor}"/></svg>`;
                 
-                // Позиционируем в месте клика
                 particle.style.left = (x - 10) + 'px';
                 particle.style.top = (y - 10) + 'px';
                 
-                // Генерируем случайное направление разлёта (в радиусе 80-130px)
                 const angle = (i * (360 / particleCount) + Math.random() * 30) * (Math.PI / 180);
                 const distance = Math.floor(Math.random() * 50) + 80;
                 const mx = Math.cos(angle) * distance;
@@ -403,8 +483,6 @@
                 particle.style.setProperty('--my', `${my}px`);
                 
                 document.body.appendChild(particle);
-                
-                // Удаляем звёздочку после окончания анимации
                 particle.addEventListener('animationend', () => particle.remove());
             }
         }
@@ -434,12 +512,13 @@
             const popEvent = (e) => {
                 e.preventDefault();
                 
-                // Получаем координаты клика/тапа для красивого взрыва
+                // Включаем булькающий звук
+                playBubbleSound();
+
                 const rect = obj.getBoundingClientRect();
                 const clickX = rect.left + rect.width / 2;
                 const clickY = rect.top + rect.height / 2;
                 
-                // Запуск взрыва частиц
                 createExplosion(clickX, clickY);
 
                 obj.remove();
@@ -543,6 +622,10 @@
                 ) {
                     asteroid.remove();
                     clearInterval(checkCollision);
+                    
+                    // Включаем космический звук поимки астероида
+                    playCatchSound();
+
                     score++;
                     document.getElementById('score').innerText = score;
 
