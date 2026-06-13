@@ -5,35 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Волшебное приключение</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background: linear-gradient(135deg, #ffe6f2, #e8f0fe);
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
-            align-content: center;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             padding: 20px;
-            box-sizing: border-box;
             text-align: center;
             user-select: none;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Волшебные звёздочки на фоне */
+        .star {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 24px;
+            animation: floatAnimation 6s linear infinite;
+            cursor: pointer;
+            z-index: 1;
+            transition: transform 0.2s;
+        }
+        .star:active {
+            transform: scale(0);
+        }
+        @keyframes floatAnimation {
+            0% {
+                transform: translateY(105vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-5vh) rotate(360deg);
+                opacity: 0;
+            }
         }
         #game-container {
-            background: white;
-            padding: 30px;
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.92);
+            padding: 35px 25px;
+            border-radius: 35px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             max-width: 500px;
             width: 100%;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            border: 3px solid #fff;
         }
         #text {
             font-size: 32px;
             font-weight: bold;
-            color: #4a4a4a;
-            margin-bottom: 40px;
+            color: #333;
+            margin-bottom: 35px;
             line-height: 1.4;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
         }
         .btn-container {
             display: flex;
@@ -44,29 +76,32 @@
             background: #ff6b8b;
             color: white;
             border: none;
-            padding: 20px;
+            padding: 22px;
             font-size: 24px;
-            border-radius: 20px;
+            border-radius: 22px;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 5px 15px rgba(255, 107, 139, 0.4);
+            transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 8px 20px rgba(255, 107, 139, 0.35);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 15px;
+            font-weight: bold;
         }
         .btn:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
         }
         .btn-blue {
             background: #4dadf7;
-            box-shadow: 0 5px 15px rgba(77, 173, 247, 0.4);
+            box-shadow: 0 8px 20px rgba(77, 173, 247, 0.35);
         }
         #restart-btn {
             background: #66bb6a;
-            font-size: 20px;
-            margin-top: 20px;
+            font-size: 22px;
+            margin-top: 25px;
             display: none;
+            box-shadow: 0 8px 20px rgba(102, 187, 106, 0.4);
+            width: 100%;
         }
     </style>
 </head>
@@ -126,7 +161,7 @@
         choicesContainer.innerHTML = '';
 
         if (node.choices.length === 0) {
-            document.getElementById('restart-btn').style.style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'block';
             return;
         }
 
@@ -139,7 +174,30 @@
         });
     }
 
+    // Функция создания летающих звёзд
+    function createStars() {
+        const icons = ['✨', '⭐', '🌸', '🎈'];
+        setInterval(() => {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.innerText = icons[Math.floor(Math.random() * icons.length)];
+            star.style.left = Math.random() * 100 + 'vw';
+            // Случайный размер и скорость анимации
+            const size = Math.random() * 20 + 20;
+            star.style.fontSize = size + 'px';
+            star.style.animationDuration = (Math.random() * 4 + 5) + 's';
+            
+            document.body.appendChild(star);
+            
+            // Удаляем звезду после окончания анимации
+            setTimeout(() => {
+                star.remove();
+            }, 9000);
+        }, 600);
+    }
+
     startGame();
+    createStars();
 </script>
 
 </body>
