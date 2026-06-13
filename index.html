@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Волшебное приключение</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffe6f2, #e8f0fe);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            user-select: none;
+        }
+        #game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        #text {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4a4a4a;
+            margin-bottom: 40px;
+            line-height: 1.4;
+        }
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .btn {
+            background: #ff6b8b;
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 107, 139, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-blue {
+            background: #4dadf7;
+            box-shadow: 0 5px 15px rgba(77, 173, 247, 0.4);
+        }
+        #restart-btn {
+            background: #66bb6a;
+            font-size: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="text">Загрузка сказки...</div>
+    <div class="btn-container" id="choices"></div>
+    <button class="btn" id="restart-btn" onclick="startGame()">✨ Играть снова</button>
+</div>
+
+<script>
+    const story = {
+        start: {
+            text: "🐕 Маноэль нашёл золотой ключ! Куда мы пойдём?",
+            choices: [
+                { text: "🌲 В сказочный лес", next: "forest", icon: "🌲" },
+                { text: "🏰 К большому замку", next: "castle", icon: "🏰" }
+            ]
+        },
+        forest: {
+            text: "🪄 В лесу танцует добрая Фея!",
+            choices: [
+                { text: "💃 Потанцевать с ней", next: "river", icon: "💃" },
+                { text: "🍎 Дать ей яблоко", next: "river", icon: "🍎" }
+            ]
+        },
+        castle: {
+            text: "🚗 У замка стоит Заяц на машинке!",
+            choices: [
+                { text: "🚙 Поехать с ним", next: "river", icon: "🚙" },
+                { text: "🥕 Дать ему морковку", next: "river", icon: "🥕" }
+            ]
+        },
+        river: {
+            text: "🌊 Впереди большая река! Как пройти?",
+            choices: [
+                { text: "🪵 Построить мостик", next: "final", icon: "🪵" },
+                { text: "🛶 Плыть на лодке", next: "final", icon: "🛶" }
+            ]
+        },
+        final: {
+            text: "🎉 Ура! Ключ подошёл! Шкатулка открылась! Ты победила! 🎁",
+            choices: []
+        }
+    };
+
+    function startGame() {
+        document.getElementById('restart-btn').style.display = 'none';
+        showNode('start');
+    }
+
+    function showNode(nodeId) {
+        const node = story[nodeId];
+        document.getElementById('text').innerText = node.text;
+        const choicesContainer = document.getElementById('choices');
+        choicesContainer.innerHTML = '';
+
+        if (node.choices.length === 0) {
+            document.getElementById('restart-btn').style.style.display = 'block';
+            return;
+        }
+
+        node.choices.forEach((choice, index) => {
+            const button = document.createElement('button');
+            button.className = `btn ${index % 2 === 1 ? 'btn-blue' : ''}`;
+            button.innerHTML = `<span>${choice.icon}</span> ${choice.text}`;
+            button.onclick = () => showNode(choice.next);
+            choicesContainer.appendChild(button);
+        });
+    }
+
+    startGame();
+</script>
+
+</body>
+</html>
