@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Волшебная Раскраска: Уровни</title>
     <style>
         body {
@@ -10,75 +10,61 @@
             text-align: center;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden;
+            overflow: hidden; /* Запрещаем прокрутку экрана, чтобы всё стояло на местах */
             position: relative;
-            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Распределяем элементы сверху вниз */
+            align-items: center;
             box-sizing: border-box;
         }
-        h1 { color: #333; margin-bottom: 5px; }
-        p { color: #666; margin-top: 0; margin-bottom: 20px; }
+
+        /* Верхняя панель с текстом */
+        .header-area {
+            flex-shrink: 0;
+            margin-bottom: 5px;
+        }
+        h1 { font-size: 20px; color: #333; margin: 5px 0 2px 0; }
+        p { font-size: 14px; color: #666; margin: 0 0 5px 0; }
         
         /* Счётчик сердечек */
         #score-counter {
-            display: none;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             color: #ff4d6d;
             background: white;
-            padding: 10px 20px;
+            padding: 6px 16px;
             border-radius: 50px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: inline-block;
-            margin-bottom: 20px;
+            margin: 5px 0;
+            display: none;
             opacity: 0;
             transition: opacity 0.5s;
         }
 
-        /* Палитра */
-        .palette {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            max-width: 550px;
-            margin: 0 auto 20px auto;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 12px;
-            border-radius: 20px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-            transition: opacity 0.5s ease;
-        }
-        .color-circle {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid #fff;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-            transition: transform 0.1s;
-        }
-        .color-circle:hover, .color-circle.active {
-            transform: scale(1.1);
-            border-color: #333;
-        }
-
-        /* Холст раскраски */
+        /* Игровой холст (всегда по центру экрана) */
         .canvas-container {
             background: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 20px;
-            display: inline-block;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             position: relative;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.5s ease;
+            max-width: 90vw; /* Не даем вылезать за ширину экрана */
+            max-height: 55vh; /* Ограничиваем по высоте, чтобы оставалось место палитре */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         svg {
-            width: 100%;
-            max-width: 420px;
+            width: auto;
             height: auto;
+            max-width: 100%;
+            max-height: 55vh; /* SVG подстраивается строго под экран */
             display: block;
             border-radius: 10px;
         }
@@ -96,6 +82,36 @@
             filter: brightness(0.97);
         }
 
+        /* Палитра (ТЕПЕРЬ СНИЗУ) */
+        .palette {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            transition: opacity 0.5s ease;
+        }
+        .color-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #fff;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+        }
+        .color-circle:hover, .color-circle.active {
+            transform: scale(1.1);
+            border-color: #333;
+        }
+
         /* Анимация кота */
         #the-cat {
             transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
@@ -107,16 +123,13 @@
             pointer-events: none;
         }
 
-        /* Скрытые элементы по умолчанию (Уровень 2) */
-        #level-2 {
-            display: none;
-        }
+        #level-2 { display: none; }
 
         /* Сердечки */
         .heart {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             cursor: pointer;
             bottom: -80px; 
             z-index: 9999;
@@ -127,20 +140,19 @@
             content: "";
             position: absolute;
             top: 0;
-            width: 32px;
-            height: 50px;
-            border-radius: 32px 32px 0 0;
+            width: 28px;
+            height: 45px;
+            border-radius: 28px 28px 0 0;
             background: var(--heart-color);
         }
-        .heart::before { left: 32px; transform: rotate(-45deg); transform-origin: 0 100%; }
+        .heart::before { left: 28px; transform: rotate(-45deg); transform-origin: 0 100%; }
         .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
 
         @keyframes flyUp {
             0% { transform: translateY(0) translateX(0) rotate(0deg); }
-            50% { transform: translateY(-50vh) translateX(30px) rotate(8deg); }
-            100% { transform: translateY(-120vh) translateX(-30px) rotate(-8deg); }
+            50% { transform: translateY(-50vh) translateX(25px) rotate(8deg); }
+            100% { transform: translateY(-120vh) translateX(-25px) rotate(-8deg); }
         }
-
         .heart.popped {
             animation: none !important;
             transform: scale(1.8) !important;
@@ -151,25 +163,10 @@
 </head>
 <body>
 
-    <h1 id="game-title">🐱 Уровень 1: Волшебный Кот 🎨</h1>
-    <p id="game-instruction">Раскрась котика полностью, чтобы открыть секретную игру!</p>
-
-    <div id="score-counter">Поймано сердечек: <span id="score">0</span> / 50</div>
-
-    <div class="palette" id="main-palette">
-        <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
-        <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
-        <div class="color-circle" style="background: #ff9f1c;" data-color="#ff9f1c"></div>
-        <div class="color-circle" style="background: #ffeb3b;" data-color="#ffeb3b"></div>
-        <div class="color-circle" style="background: #4ecc6e;" data-color="#4ecc6e"></div>
-        <div class="color-circle" style="background: #20b2aa;" data-color="#20b2aa"></div>
-        <div class="color-circle" style="background: #00b4d8;" data-color="#00b4d8"></div>
-        <div class="color-circle" style="background: #0077b6;" data-color="#0077b6"></div>
-        <div class="color-circle" style="background: #7209b7;" data-color="#7209b7"></div>
-        <div class="color-circle" style="background: #b5179e;" data-color="#b5179e"></div>
-        <div class="color-circle" style="background: #d4a373;" data-color="#d4a373"></div>
-        <div class="color-circle" style="background: #4a4a4a;" data-color="#4a4a4a"></div>
-        <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
+    <div class="header-area">
+        <h1 id="game-title">🐱 Уровень 1: Волшебный Кот 🎨</h1>
+        <p id="game-instruction">Раскрась котика полностью, чтобы открыть секретную игру!</p>
+        <div id="score-counter">Поймано сердечек: <span id="score">0</span> / 50</div>
     </div>
 
     <div class="canvas-container" id="painting-canvas">
@@ -199,10 +196,10 @@
         <svg viewBox="0 0 400 400" id="level-2">
             <rect x="0" y="0" width="400" height="400" class="paintable" />
             <circle cx="70" cy="80" r="35" class="paintable" />
-            <path d="M 30 85 Q 70 105 110 85" fill="none" stroke="#2c3e50" stroke-width="3" /> <circle cx="330" cy="300" r="25" class="paintable" />
+            <path d="M 30 85 Q 70 105 110 85" fill="none" stroke="#2c3e50" stroke-width="3" />
+            <circle cx="330" cy="300" r="25" class="paintable" />
             <polygon points="320,70 323,77 332,77 325,82 327,90 320,85 313,90 315,82 308,77 317,77" class="paintable" />
             <polygon points="80,280 83,287 92,287 85,292 87,300 80,295 73,300 75,292 68,287 77,287" class="paintable" />
-            
             <path d="M 200 80 C 230 140, 240 240, 240 280 L 160 280 C 160 240, 170 140, 200 80 Z" class="paintable" />
             <circle cx="200" cy="180" r="22" class="paintable" />
             <path d="M 160 240 L 120 280 L 160 280 Z" class="paintable" />
@@ -212,13 +209,29 @@
 
     </div>
 
+    <div class="palette" id="main-palette">
+        <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
+        <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
+        <div class="color-circle" style="background: #ff9f1c;" data-color="#ff9f1c"></div>
+        <div class="color-circle" style="background: #ffeb3b;" data-color="#ffeb3b"></div>
+        <div class="color-circle" style="background: #4ecc6e;" data-color="#4ecc6e"></div>
+        <div class="color-circle" style="background: #20b2aa;" data-color="#20b2aa"></div>
+        <div class="color-circle" style="background: #00b4d8;" data-color="#00b4d8"></div>
+        <div class="color-circle" style="background: #0077b6;" data-color="#0077b6"></div>
+        <div class="color-circle" style="background: #7209b7;" data-color="#7209b7"></div>
+        <div class="color-circle" style="background: #b5179e;" data-color="#b5179e"></div>
+        <div class="color-circle" style="background: #d4a373;" data-color="#d4a373"></div>
+        <div class="color-circle" style="background: #4a4a4a;" data-color="#4a4a4a"></div>
+        <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
+    </div>
+
     <script>
         let selectedColor = '#ff4d6d';
         let gameActive = false;
         let heartInterval;
         let score = 0;
 
-        // Выбор цвета в палитре
+        // Выбор цвета
         const colorCircles = document.querySelectorAll('.color-circle');
         colorCircles.forEach(circle => {
             circle.addEventListener('click', (e) => {
@@ -228,11 +241,10 @@
             });
         });
 
-        // Функция покраски элементов (работает для обеих картинок)
+        // Покраска
         function initPainting() {
             const paintableElements = document.querySelectorAll('.paintable');
             paintableElements.forEach(element => {
-                // Сначала убираем старый слушатель, чтобы не дублировать
                 element.removeEventListener('click', handlePaint);
                 element.addEventListener('click', handlePaint);
             });
@@ -245,10 +257,9 @@
             }
         }
 
-        // Запуск при старте страницы
         initPainting();
 
-        // Проверка готовности кота (Уровень 1)
+        // Проверка кота
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
@@ -269,32 +280,29 @@
             }
         }
 
-        // СТАДИЯ 2: ИГРА В СЕРДЕЧКИ
+        // Игра в сердечки
         function startHeartGame() {
             gameActive = true;
             score = 0;
             document.getElementById('score').innerText = score;
             
             document.getElementById('game-title').innerHTML = "❤️ Поймай 50 сердечек! ✨";
-            document.getElementById('game-instruction').innerHTML = "Лопай сердечки тапами, чтобы открыть супер-уровень!";
+            document.getElementById('game-instruction').innerHTML = "Лопай сердечки тапами!";
             
-            // Показываем счетчик
             const counterDiv = document.getElementById('score-counter');
-            counterDiv.style.opacity = '1';
+            counterDiv.style.display = 'inline-block';
+            setTimeout(() => counterDiv.style.opacity = '1', 50);
 
-            // Прячем палитру и раскраску кота
             document.getElementById('main-palette').style.opacity = '0';
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('main-palette').style.display = 'none';
-                document.getElementById('level-1').style.display = 'none'; // Отключаем кота
-            }, 600);
+                document.getElementById('level-1').style.display = 'none';
+            }, 500);
 
-            // Интервал вылета сердечек
             heartInterval = setInterval(createHeart, 400);
         }
 
-        // Отрисовка летящего сердечка
         function createHeart() {
             if (!gameActive) return;
 
@@ -308,23 +316,20 @@
             const randomX = Math.floor(Math.random() * 80) + 5;
             heart.style.left = randomX + '%';
 
-            const randomScale = (Math.random() * 0.5) + 0.7; 
+            const randomScale = (Math.random() * 0.4) + 0.7; 
             heart.style.transform = `scale(${randomScale})`;
 
-            const randomDuration = (Math.random() * 2) + 2.5; // Чуть быстрее летят
+            const randomDuration = (Math.random() * 1.5) + 2.5;
             heart.style.animationDuration = randomDuration + 's';
 
-            // Клик по сердечку
             const popEvent = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 heart.classList.add('popped');
                 
-                // Начисляем очки
                 score++;
                 document.getElementById('score').innerText = score;
 
-                // ПРОВЕРКА ПОБЕДЫ: Набрали 50 очков?
                 if (score >= 50 && gameActive) {
                     endHeartGame();
                 }
@@ -339,32 +344,24 @@
             document.body.appendChild(heart);
         }
 
-        // СТАДИЯ 3: ПЕРЕХОД НА ВТОРОЙ УРОВЕНЬ
+        // Уровень 2
         function endHeartGame() {
             gameActive = false;
-            clearInterval(heartInterval); // Стоп вылету сердечек
-            
-            // Удаляем все оставшиеся на экране сердечки
+            clearInterval(heartInterval);
             document.querySelectorAll('.heart').forEach(h => h.remove());
 
-            // Меняем интерфейс на Космический уровень
-            document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета в космосе! 🌟";
-            document.getElementById('game-instruction').innerHTML = "Ура! Ты собрал все сердечки! Раскрась космический корабль!";
+            document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета! 🌟";
+            document.getElementById('game-instruction').innerHTML = "Ты собрал все сердечки! Раскрась ракету!";
             
-            // Прячем счётчик
             document.getElementById('score-counter').style.display = 'none';
-
-            // Включаем вторую раскраску
             document.getElementById('level-2').style.display = 'block';
-            
-            // Плавно возвращаем холст и палитру
             document.getElementById('main-palette').style.display = 'flex';
+            
             setTimeout(() => {
                 document.getElementById('main-palette').style.opacity = '1';
                 document.getElementById('painting-canvas').style.opacity = '1';
-            }, 100);
+            }, 50);
 
-            // Переинициализируем покраску для новых элементов ракеты
             initPainting();
         }
     </script>
