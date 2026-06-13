@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Волшебная Раскраска: Уровни</title>
+    <title>Волшебная Раскраска: Космическое Приключение</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -13,17 +13,16 @@
             padding: 10px;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden; /* Запрещаем прокрутку, чтобы ничего не дёргалось */
+            overflow: hidden;
             position: relative;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Выравниваем всё сверху вниз */
+            justify-content: flex-start;
             align-items: center;
             box-sizing: border-box;
         }
 
-        /* Верхняя панель */
         .header-area {
             flex-shrink: 0;
             width: 100%;
@@ -32,7 +31,6 @@
         h1 { font-size: 20px; color: #333; margin: 5px 0 2px 0; }
         p { font-size: 13px; color: #666; margin: 0 0 5px 0; }
         
-        /* Счётчик сердечек */
         #score-counter {
             font-size: 18px;
             font-weight: bold;
@@ -47,7 +45,7 @@
             transition: opacity 0.5s;
         }
 
-        /* Палитра (ТЕПЕРЬ ВВЕРХУ, ПОД ТЕКСТОМ) */
+        /* Палитра */
         .palette {
             display: flex;
             justify-content: center;
@@ -77,7 +75,7 @@
             border-color: #333;
         }
 
-        /* Игровой холст (По центру, под палитрой) */
+        /* Холст */
         .canvas-container {
             background: white;
             padding: 10px;
@@ -86,23 +84,11 @@
             position: relative;
             transition: opacity 0.5s ease;
             flex-shrink: 0;
-            
-            /* Размеры холста плавно адаптируются под высоту экрана */
             width: 300px;
             height: 300px;
         }
-        @media (min-height: 600px) {
-            .canvas-container {
-                width: 340px;
-                height: 340px;
-            }
-        }
-        @media (min-height: 700px) {
-            .canvas-container {
-                width: 380px;
-                height: 380px;
-            }
-        }
+        @media (min-height: 600px) { .canvas-container { width: 340px; height: 340px; } }
+        @media (min-height: 700px) { .canvas-container { width: 380px; height: 380px; } }
 
         svg {
             width: 100%;
@@ -111,7 +97,6 @@
             border-radius: 10px;
         }
         
-        /* Элементы раскраски */
         .paintable {
             fill: #ffffff;
             stroke: #2c3e50;
@@ -120,9 +105,6 @@
             stroke-linecap: round;
             cursor: pointer;
             transition: fill 0.2s ease;
-        }
-        .paintable:hover {
-            filter: brightness(0.97);
         }
 
         /* Анимация уходящего кота */
@@ -136,40 +118,50 @@
             pointer-events: none;
         }
 
-        /* По умолчанию скрываем ракету */
+        /* Анимация улетающей ракеты */
+        #the-rocket {
+            transition: transform 2s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 1.5s ease;
+            transform-origin: center center;
+        }
+        .rocket-flies-away {
+            transform: translateY(-600px) scale(0.5);
+            opacity: 0;
+            pointer-events: none;
+        }
+
         #level-2 { display: none; }
 
-        /* Сердечки */
-        .heart {
+        /* ОБЩИЙ СТИЛЬ ДЛЯ ЛЕТЯЩИХ ОБЪЕКТОВ */
+        .flying-object {
             position: absolute;
-            width: 55px;
-            height: 55px;
             cursor: pointer;
             bottom: -80px; 
             z-index: 9999;
             animation: flyUp 4s linear forwards;
             transition: transform 0.15s ease, opacity 0.15s ease;
         }
+
+        /* СЕРДЕЧКИ */
+        .heart { width: 55px; height: 55px; }
         .heart::before, .heart::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            width: 28px;
-            height: 45px;
-            border-radius: 28px 28px 0 0;
-            background: var(--heart-color);
+            content: ""; position: absolute; top: 0; width: 28px; height: 45px;
+            border-radius: 28px 28px 0 0; background: var(--obj-color);
         }
         .heart::before { left: 28px; transform: rotate(-45deg); transform-origin: 0 100%; }
         .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+
+        /* ЗВЁЗДОЧКИ (сделаны через встроенный SVG для идеального вида) */
+        .star { width: 50px; height: 50px; }
 
         @keyframes flyUp {
             0% { transform: translateY(0) translateX(0) rotate(0deg); }
             50% { transform: translateY(-50vh) translateX(25px) rotate(8deg); }
             100% { transform: translateY(-120vh) translateX(-25px) rotate(-8deg); }
         }
-        .heart.popped {
+        
+        .flying-object.popped {
             animation: none !important;
-            transform: scale(1.8) !important;
+            transform: scale(1.9) !important;
             opacity: 0 !important;
             pointer-events: none !important;
         }
@@ -180,7 +172,7 @@
     <div class="header-area">
         <h1 id="game-title">🐱 Уровень 1: Волшебный Кот 🎨</h1>
         <p id="game-instruction">Раскрась котика полностью, чтобы открыть секретную игру!</p>
-        <div id="score-counter">Поймано сердечек: <span id="score">0</span> / 50</div>
+        <div id="score-counter">Поймано предметов: <span id="score">0</span> / 50</div>
     </div>
 
     <div class="palette" id="main-palette">
@@ -202,14 +194,14 @@
     <div class="canvas-container" id="painting-canvas">
         
         <svg viewBox="0 0 400 400" id="level-1">
-            <rect x="0" y="0" width="400" height="400" class="paintable" />
-            <polygon points="60,50 65,65 80,65 67,75 72,90 60,80 48,90 53,75 40,65 55,65" class="paintable" />
-            <polygon points="320,50 323,60 335,60 325,67 328,78 320,70 312,78 315,67 305,60 317,60" class="paintable" />
-            <polygon points="70,160 73,168 81,168 74,173 76,182 70,176 64,182 66,173 59,168 67,168" class="paintable" />
-            <circle cx="230" cy="100" r="45" class="paintable" />
-            <circle cx="210" cy="85" r="7" class="paintable" />
-            <circle cx="245" cy="115" r="9" class="paintable" />
-            <rect x="0" y="320" width="400" height="80" class="paintable" />
+            <rect x="0" y="0" width="400" height="400" class="paintable level1-part" />
+            <polygon points="60,50 65,65 80,65 67,75 72,90 60,80 48,90 53,75 40,65 55,65" class="paintable level1-part" />
+            <polygon points="320,50 323,60 335,60 325,67 328,78 320,70 312,78 315,67 305,60 317,60" class="paintable level1-part" />
+            <polygon points="70,160 73,168 81,168 74,173 76,182 70,176 64,182 66,173 59,168 67,168" class="paintable level1-part" />
+            <circle cx="230" cy="100" r="45" class="paintable level1-part" />
+            <circle cx="210" cy="85" r="7" class="paintable level1-part" />
+            <circle cx="245" cy="115" r="9" class="paintable level1-part" />
+            <rect x="0" y="320" width="400" height="80" class="paintable level1-part" />
             
             <g id="the-cat">
                 <path d="M 130 320 C 100 320, 80 270, 100 240 C 110 230, 120 240, 115 255 C 105 275, 120 300, 145 305 Z" class="paintable cat-part" />
@@ -224,17 +216,20 @@
         </svg>
 
         <svg viewBox="0 0 400 400" id="level-2">
-            <rect x="0" y="0" width="400" height="400" class="paintable" />
-            <circle cx="70" cy="80" r="35" class="paintable" />
+            <rect x="0" y="0" width="400" height="400" class="paintable level2-part" />
+            <circle cx="70" cy="80" r="35" class="paintable level2-part" />
             <path d="M 30 85 Q 70 105 110 85" fill="none" stroke="#2c3e50" stroke-width="3" />
-            <circle cx="330" cy="300" r="25" class="paintable" />
-            <polygon points="320,70 323,77 332,77 325,82 327,90 320,85 313,90 315,82 308,77 317,77" class="paintable" />
-            <polygon points="80,280 83,287 92,287 85,292 87,300 80,295 73,300 75,292 68,287 77,287" class="paintable" />
-            <path d="M 200 80 C 230 140, 240 240, 240 280 L 160 280 C 160 240, 170 140, 200 80 Z" class="paintable" />
-            <circle cx="200" cy="180" r="22" class="paintable" />
-            <path d="M 160 240 L 120 280 L 160 280 Z" class="paintable" />
-            <path d="M 240 240 L 280 280 L 240 280 Z" class="paintable" />
-            <polygon points="180,285 200,330 220,285 210,300 200,285 190,300" class="paintable" />
+            <circle cx="330" cy="300" r="25" class="paintable level2-part" />
+            <polygon points="320,70 323,77 332,77 325,82 327,90 320,85 313,90 315,82 308,77 317,77" class="paintable level2-part" />
+            <polygon points="80,280 83,287 92,287 85,292 87,300 80,295 73,300 75,292 68,287 77,287" class="paintable level2-part" />
+            
+            <g id="the-rocket">
+                <path d="M 200 80 C 230 140, 240 240, 240 280 L 160 280 C 160 240, 170 140, 200 80 Z" class="paintable rocket-part" />
+                <circle cx="200" cy="180" r="22" class="paintable rocket-part" />
+                <path d="M 160 240 L 120 280 L 160 280 Z" class="paintable rocket-part" />
+                <path d="M 240 240 L 280 280 L 240 280 Z" class="paintable rocket-part" />
+                <polygon points="180,285 200,330 220,285 210,300 200,285 190,300" class="paintable rocket-part" />
+            </g>
         </svg>
 
     </div>
@@ -244,14 +239,13 @@
         let gameActive = false;
         let heartInterval;
         let score = 0;
+        let currentLevel = 1;
 
-        // Ждем полной загрузки HTML структуры, чтобы ничего не ломалось
         document.addEventListener("DOMContentLoaded", () => {
             initPalette();
             initPainting();
         });
 
-        // Инициализация кликов по палитре
         function initPalette() {
             const colorCircles = document.querySelectorAll('.color-circle');
             colorCircles.forEach(circle => {
@@ -263,7 +257,6 @@
             });
         }
 
-        // Настройка раскрашивания элементов
         function initPainting() {
             const paintableElements = document.querySelectorAll('.paintable');
             paintableElements.forEach(element => {
@@ -275,40 +268,63 @@
         function handlePaint(e) {
             e.preventDefault();
             e.target.style.fill = selectedColor;
-            if (e.target.classList.contains('cat-part')) {
+            
+            if (currentLevel === 1 && e.target.classList.contains('cat-part')) {
                 checkCatStatus();
+            } else if (currentLevel === 2) {
+                checkRocketStatus();
             }
         }
 
-        // Проверка готовности кота
+        // Проверка Уровня 1 (Кот)
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
-
             catParts.forEach(part => {
                 let currentFill = window.getComputedStyle(part).fill;
-                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') {
-                    allPainted = false;
-                }
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
             });
 
             if (allPainted) {
                 setTimeout(() => {
-                    const catGroup = document.getElementById('the-cat');
-                    catGroup.classList.add('cat-walks-away');
+                    document.getElementById('the-cat').classList.add('cat-walks-away');
                     setTimeout(startHeartGame, 2500);
                 }, 500);
             }
         }
 
-        // Включение игры в сердечки
+        // Проверка Уровня 2 (Ракета + Космос)
+        function checkRocketStatus() {
+            // Проверяем вообще ВСЕ детали второго уровня (и ракету, и планеты, и фон)
+            const level2Parts = document.querySelectorAll('.level2-part, .rocket-part');
+            let allPainted = true;
+            level2Parts.forEach(part => {
+                let currentFill = window.getComputedStyle(part).fill;
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') allPainted = false;
+            });
+
+            if (allPainted) {
+                setTimeout(() => {
+                    // Ракета улетает вверх!
+                    document.getElementById('the-rocket').classList.add('rocket-flies-away');
+                    
+                    // Финальное поздравление через 2 секунды
+                    setTimeout(() => {
+                        document.getElementById('game-title').innerHTML = "🌟 КОСМИЧЕСКАЯ ПОБЕДА! 🌟";
+                        document.getElementById('game-instruction').innerHTML = "Ты настоящий супер-художник! Ура-а-а!";
+                    }, 2000);
+                }, 500);
+            }
+        }
+
+        // МИНИ-ИГРА: СЕРДЕЧКИ И ЗВЁЗДЫ
         function startHeartGame() {
             gameActive = true;
             score = 0;
             document.getElementById('score').innerText = score;
             
-            document.getElementById('game-title').innerHTML = "❤️ Поймай 50 сердечек! ✨";
-            document.getElementById('game-instruction').innerHTML = "Лопай сердечки тапами!";
+            document.getElementById('game-title').innerHTML = "❤️ Поймай 50 звёзд и сердечек! ✨";
+            document.getElementById('game-instruction').innerHTML = "Тапай по ним быстрее!";
             
             const counterDiv = document.getElementById('score-counter');
             counterDiv.style.display = 'inline-block';
@@ -321,32 +337,44 @@
                 document.getElementById('level-1').style.display = 'none';
             }, 500);
 
-            heartInterval = setInterval(createHeart, 400);
+            // Запускаем генератор случайных объектов
+            heartInterval = setInterval(createFlyingObject, 350);
         }
 
-        function createHeart() {
+        function createFlyingObject() {
             if (!gameActive) return;
 
-            const heart = document.createElement('div');
-            heart.classList.add('heart');
+            const isStar = Math.random() > 0.5; // 50% шанс, что полетит звезда, 50% — сердечко
+            const obj = document.createElement('div');
+            obj.classList.add('flying-object');
 
-            const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ba55d3', '#ff4500', '#ff85a2'];
+            const colors = ['#ff4d6d', '#ff758f', '#ffeb3b', '#ff9f1c', '#ba55d3', '#00b4d8', '#4ecc6e'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            heart.style.setProperty('--heart-color', randomColor);
+
+            if (isStar) {
+                // Если летит звезда
+                obj.classList.add('star');
+                // Вставляем красивую SVG звёздочку внутрь дива
+                obj.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9" fill="${randomColor}" stroke="#fff" stroke-width="1"/></svg>`;
+            } else {
+                // Если летит сердечко
+                obj.classList.add('heart');
+                obj.style.setProperty('--obj-color', randomColor);
+            }
 
             const randomX = Math.floor(Math.random() * 80) + 5;
-            heart.style.left = randomX + '%';
+            obj.style.left = randomX + '%';
 
             const randomScale = (Math.random() * 0.4) + 0.7; 
-            heart.style.transform = `scale(${randomScale})`;
+            obj.style.transform = `scale(${randomScale})`;
 
-            const randomDuration = (Math.random() * 1.5) + 2.5;
-            heart.style.animationDuration = randomDuration + 's';
+            const randomDuration = (Math.random() * 1.5) + 2.3;
+            obj.style.animationDuration = randomDuration + 's';
 
             const popEvent = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                heart.classList.add('popped');
+                obj.classList.add('popped');
                 
                 score++;
                 document.getElementById('score').innerText = score;
@@ -355,24 +383,25 @@
                     endHeartGame();
                 }
 
-                setTimeout(() => { heart.remove(); }, 200);
+                setTimeout(() => { obj.remove(); }, 200);
             };
 
-            heart.addEventListener('mousedown', popEvent);
-            heart.addEventListener('touchstart', popEvent, { passive: false });
-            heart.addEventListener('animationend', () => { heart.remove(); });
+            obj.addEventListener('mousedown', popEvent);
+            obj.addEventListener('touchstart', popEvent, { passive: false });
+            obj.addEventListener('animationend', () => { obj.remove(); });
 
-            document.body.appendChild(heart);
+            document.body.appendChild(obj);
         }
 
-        // Переход на Уровень 2 (Ракета)
+        // ПЕРЕХОД НА УРОВЕНЬ 2
         function endHeartGame() {
             gameActive = false;
+            currentLevel = 2;
             clearInterval(heartInterval);
-            document.querySelectorAll('.heart').forEach(h => h.remove());
+            document.querySelectorAll('.flying-object').forEach(o => o.remove());
 
             document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета! 🌟";
-            document.getElementById('game-instruction').innerHTML = "Ты собрал все сердечки! Раскрась ракету!";
+            document.getElementById('game-instruction').innerHTML = "Раскрась ракету и планеты, чтобы запустить её в космос!";
             
             document.getElementById('score-counter').style.display = 'none';
             document.getElementById('level-2').style.display = 'block';
@@ -383,7 +412,6 @@
                 document.getElementById('painting-canvas').style.opacity = '1';
             }, 50);
 
-            // Снова активируем покраску для новых элементов
             initPainting();
         }
     </script>
