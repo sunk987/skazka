@@ -7,6 +7,8 @@
     <style>
         * {
             box-sizing: border-box;
+            /* Убираем синюю/серую рамку-подсветку при нажатии на мобильных устройствах */
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             background: linear-gradient(135deg, #ffe6f2 0%, #b3dbff 100%);
@@ -29,14 +31,20 @@
             z-index: 9999;
             font-size: 40px;
             animation: floatUp 5s linear infinite;
-            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-            padding: 10px; 
+            /* Плавный переход для эффекта лопанья */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease-out;
+            padding: 15px; 
             touch-action: manipulation;
+            display: inline-block;
         }
+        
+        /* Эффект красивого лопанья */
         .heart.pop {
-            transform: scale(1.6);
+            transform: scale(2.2) rotate(15deg);
             opacity: 0;
+            filter: blur(2px);
         }
+        
         @keyframes floatUp {
             0% {
                 transform: translateY(105vh) scale(0.8) rotate(0deg);
@@ -186,17 +194,23 @@
             heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
 
             const popHeart = (e) => {
+                e.preventDefault(); // Предотвращаем стандартные мобильные эффекты задержки тапа
                 e.stopPropagation();
+                
+                // Если сердечко уже лопается, повторно не обрабатываем
+                if(heart.classList.contains('pop')) return;
+                
                 heart.classList.add('pop');
-                setTimeout(() => { heart.remove(); }, 100);
+                setTimeout(() => { heart.remove(); }, 200); // Чуть увеличили время, чтобы анимация успела проиграться
             };
 
+            // Используем touchstart для мгновенной реакции на смартфонах без задержек
+            heart.addEventListener('touchstart', popHeart, {passive: false});
             heart.addEventListener('mousedown', popHeart);
-            heart.addEventListener('touchstart', popHeart);
             
             document.body.appendChild(heart);
             
-            setTimeout(() => { if (heart) heart.remove(); }, 7000);
+            setTimeout(() => { if (heart && !heart.classList.contains('pop')) heart.remove(); }, 7000);
         }, 500);
     }
 
