@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Волшебная Раскраска</title>
+    <title>Волшебная Раскраска с секретом</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -13,18 +13,11 @@
             padding: 20px;
             user-select: none;
             -webkit-user-select: none;
+            overflow-x: hidden; /* Чтобы уходящий кот не растягивал страницу */
         }
-        h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-        p {
-            color: #666;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
+        h1 { color: #333; margin-bottom: 5px; }
+        p { color: #666; margin-top: 0; margin-bottom: 20px; }
         
-        /* Палитра цветов */
         .palette {
             display: flex;
             justify-content: center;
@@ -51,13 +44,13 @@
             border-color: #333;
         }
 
-        /* Холст */
         .canvas-container {
             background: white;
             padding: 10px;
             border-radius: 20px;
             display: inline-block;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
         }
         svg {
             width: 100%;
@@ -67,7 +60,6 @@
             border-radius: 10px;
         }
         
-        /* Элементы для покраски */
         .paintable {
             fill: #ffffff;
             stroke: #2c3e50;
@@ -80,12 +72,25 @@
         .paintable:hover {
             filter: brightness(0.97);
         }
+
+        /* АНИМАЦИЯ УХОДЯЩЕГО КОТА */
+        #the-cat {
+            transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
+            transform-origin: bottom center;
+        }
+
+        /* Этот класс включится через JavaScript, когда кот будет раскрашен */
+        .cat-walks-away {
+            transform: translateX(450px) scale(0.6); /* Кот уходит вправо и уменьшается (вдаль) */
+            opacity: 0; /* Плавно исчезает */
+            pointer-events: none; /* Больше на него нельзя нажать */
+        }
     </style>
 </head>
 <body>
 
-    <h1>🐱 Волшебная Раскраска 🎨</h1>
-    <p>Нажми на цвет, а потом на котика, луну или небо!</p>
+    <h1>🐱 Кот, который гуляет сам по себе 🎨</h1>
+    <p>Раскрась всё небо, луну и котика полностью, и посмотри, что произойдет!</p>
 
     <div class="palette">
         <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
@@ -106,7 +111,7 @@
 
     <div class="canvas-container">
         <svg viewBox="0 0 400 400">
-            <!-- БОЛЬШОЙ ФОН (НЕБО) -->
+            <!-- ФОН (НЕБО) -->
             <rect x="0" y="0" width="400" height="400" class="paintable" />
 
             <!-- ЗВЁЗДЫ -->
@@ -116,38 +121,37 @@
 
             <!-- ЛУНА -->
             <circle cx="230" cy="100" r="45" class="paintable" />
-            <!-- Кратеры внутри луны -->
             <circle cx="210" cy="85" r="7" class="paintable" />
             <circle cx="245" cy="115" r="9" class="paintable" />
 
             <!-- ЗАБОР -->
             <rect x="0" y="320" width="400" height="80" class="paintable" />
             
-            <!-- КОТИК -->
-            <!-- Хвост -->
-            <path d="M 130 320 C 100 320, 80 270, 100 240 C 110 230, 120 240, 115 255 C 105 275, 120 300, 145 305 Z" class="paintable" />
-            <!-- Тело -->
-            <ellipse cx="180" cy="260" rx="45" ry="60" class="paintable" />
-            <!-- Голова -->
-            <circle cx="180" cy="160" r="40" class="paintable" />
-            <!-- Левое ухо -->
-            <polygon points="145,140 130,90 165,125" class="paintable" />
-            <!-- Правое ухо -->
-            <polygon points="215,140 230,90 195,125" class="paintable" />
-            <!-- Левый глаз -->
-            <circle cx="165" cy="155" r="5" fill="#2c3e50" />
-            <!-- Правый глаз -->
-            <circle cx="195" cy="155" r="5" fill="#2c3e50" />
-            <!-- Носик -->
-            <polygon points="180,165 176,170 184,170" fill="#ff758f" />
+            <!-- ГРУППА ПЕРСОНАЖА "КОТ" -->
+            <g id="the-cat">
+                <!-- Хвост -->
+                <path d="M 130 320 C 100 320, 80 270, 100 240 C 110 230, 120 240, 115 255 C 105 275, 120 300, 145 305 Z" class="paintable cat-part" />
+                <!-- Тело -->
+                <ellipse cx="180" cy="260" rx="45" ry="60" class="paintable cat-part" />
+                <!-- Левое ухо -->
+                <polygon points="145,140 130,90 165,125" class="paintable cat-part" />
+                <!-- Правое ухо -->
+                <polygon points="215,140 230,90 195,125" class="paintable cat-part" />
+                <!-- Голова -->
+                <circle cx="180" cy="160" r="40" class="paintable cat-part" />
+                
+                <!-- Глазки и нос привязаны к голове, они уходят вместе с ней -->
+                <circle cx="165" cy="155" r="5" fill="#2c3e50" />
+                <circle cx="195" cy="155" r="5" fill="#2c3e50" />
+                <polygon points="180,165 176,170 184,170" fill="#ff758f" />
+            </g>
         </svg>
     </div>
 
     <script>
-        // Переменная хранeния текущего цвета
         let selectedColor = '#ff4d6d';
 
-        // Логика выбора цвета на палитре
+        // Выбор цвета
         const colorCircles = document.querySelectorAll('.color-circle');
         colorCircles.forEach(circle => {
             circle.addEventListener('click', (e) => {
@@ -157,14 +161,42 @@
             });
         });
 
-        // Логика покраски элементов
+        // Покраска
         const paintableElements = document.querySelectorAll('.paintable');
         paintableElements.forEach(element => {
             element.addEventListener('click', (e) => {
-                // Красим именно тот элемент, на который кликнули
                 e.target.style.fill = selectedColor;
+
+                // Проверяем: если кликнули на часть кота, запускаем проверку готовности
+                if (e.target.classList.contains('cat-part')) {
+                    checkCatStatus();
+                }
             });
         });
+
+        // Функция проверки: все ли части кота раскрашены?
+        function checkCatStatus() {
+            const catParts = document.querySelectorAll('.cat-part');
+            let allPainted = true;
+
+            catParts.forEach(part => {
+                // Если у какой-то части кота fill всё еще белый (или пустой), значит он не докрашен
+                let currentFill = window.getComputedStyle(part).fill;
+                // В браузере белый цвет отображается как rgb(255, 255, 255)
+                if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') {
+                    allPainted = false;
+                }
+            });
+
+            // Если все 5 частей кота (хвост, тело, уши, голова) поменяли цвет с белого на любой другой
+            if (allPainted) {
+                // Даем небольшую задержку в полсекунды, чтобы ребенок успел увидеть финальный цвет
+                setTimeout(() => {
+                    const catGroup = document.getElementById('the-cat');
+                    catGroup.classList.add('cat-walks-away');
+                }, 500);
+            }
+        }
     </script>
 
 </body>
