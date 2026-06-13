@@ -13,7 +13,7 @@
             padding: 20px;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden; /* Скрываем всё, что вылетает за границы экрана */
+            overflow: hidden; /* Важно, чтобы не дергался экран от сердечек */
             position: relative;
             min-height: 100vh;
             box-sizing: border-box;
@@ -21,7 +21,7 @@
         h1 { color: #333; margin-bottom: 5px; }
         p { color: #666; margin-top: 0; margin-bottom: 20px; }
         
-        /* Палитра цветов */
+        /* Палитра */
         .palette {
             display: flex;
             justify-content: center;
@@ -35,7 +35,6 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.1);
             transition: opacity 0.5s ease;
         }
-
         .color-circle {
             width: 45px;
             height: 45px;
@@ -92,30 +91,30 @@
             pointer-events: none;
         }
 
-        /* --- СЕРДЕЧКИ (НОВАЯ ИГРА) --- */
+        /* --- СЕРДЕЧКИ (ИСПРАВЛЕННЫЙ ВАРИАНТ) --- */
         .heart {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             cursor: pointer;
-            bottom: -60px; /* Появляются под экраном */
-            z-index: 999;
+            bottom: -80px; 
+            z-index: 9999;
             animation: flyUp 4s linear forwards;
             transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
-        /* Как рисуется сердечко на чистом CSS */
+        /* Теперь цвет передается напрямую через CSS-переменную, никаких inherit */
         .heart::before, .heart::after {
             content: "";
             position: absolute;
             top: 0;
-            width: 26px;
-            height: 40px;
-            border-radius: 25px 25px 0 0;
-            background: inherit;
+            width: 32px;
+            height: 50px;
+            border-radius: 32px 32px 0 0;
+            background: var(--heart-color); /* Жестко заданный цвет */
         }
         .heart::before {
-            left: 26px;
+            left: 32px;
             transform: rotate(-45deg);
             transform-origin: 0 100%;
         }
@@ -125,25 +124,23 @@
             transform-origin: 100% 100%;
         }
 
-        /* Анимация полета снизу вверх с легким покачиванием */
         @keyframes flyUp {
             0% {
                 transform: translateY(0) translateX(0) rotate(0deg);
             }
             50% {
-                transform: translateY(-50vh) translateX(20px) rotate(5deg);
+                transform: translateY(-50vh) translateX(30px) rotate(8deg);
             }
             100% {
-                transform: translateY(-110vh) translateX(-20px) rotate(-5deg);
+                transform: translateY(-120vh) translateX(-30px) rotate(-8deg);
             }
         }
 
-        /* Эффект лопанья сердечка */
         .heart.popped {
-            animation: none;
-            transform: scale(1.6);
-            opacity: 0;
-            pointer-events: none;
+            animation: none !important;
+            transform: scale(1.8) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
     </style>
 </head>
@@ -152,7 +149,6 @@
     <h1 id="game-title">🐱 Кот, который гуляет сам по себе 🎨</h1>
     <p id="game-instruction">Раскрась котика полностью, чтобы активировать магию!</p>
 
-    <!-- Палитра -->
     <div class="palette" id="main-palette">
         <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
         <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
@@ -169,7 +165,6 @@
         <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
     </div>
 
-    <!-- Холст -->
     <div class="canvas-container" id="painting-canvas">
         <svg viewBox="0 0 400 400">
             <rect x="0" y="0" width="400" height="400" class="paintable" />
@@ -209,7 +204,7 @@
             });
         });
 
-        // Покраска деталей
+        // Покраска
         const paintableElements = document.querySelectorAll('.paintable');
         paintableElements.forEach(element => {
             element.addEventListener('click', (e) => {
@@ -220,7 +215,7 @@
             });
         });
 
-        // Проверка готовности кота
+        // Проверка кота
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
@@ -236,22 +231,18 @@
                 setTimeout(() => {
                     const catGroup = document.getElementById('the-cat');
                     catGroup.classList.add('cat-walks-away');
-                    
-                    // Как только кот ушёл (через 2.5 секунды), запускаем сердечки
                     setTimeout(startHeartGame, 2500);
                 }, 500);
             }
         }
 
-        // ЗАПУСК ИГРЫ В СЕРДЕЧКИ
+        // Старт игры
         function startHeartGame() {
             gameActive = true;
             
-            // Меняем заголовки на экране
             document.getElementById('game-title').innerHTML = "❤️ Поймай все сердечки! ✨";
             document.getElementById('game-instruction').innerHTML = "Тапай по сердечкам пальчиком, чтобы они лопались!";
             
-            // Плавно прячем палитру и саму раскраску, чтобы освободить место для игры
             document.getElementById('main-palette').style.opacity = '0';
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => {
@@ -259,53 +250,44 @@
                 document.getElementById('painting-canvas').style.display = 'none';
             }, 800);
 
-            // Начинаем создавать сердечки каждые 400 миллисекунд (очень активно)
-            heartInterval = setInterval(createHeart, 400);
+            heartInterval = setInterval(createHeart, 450);
         }
 
-        // Создание одного сердечка
+        // Создание сердечка
         function createHeart() {
             if (!gameActive) return;
 
             const heart = document.createElement('div');
             heart.classList.add('heart');
 
-            // Случайный сочный цвет для сердечка
-            const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ff85a2', '#ba55d3', '#ff4500'];
+            // Палитра цветов для сердечек
+            const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ba55d3', '#ff4500', '#ff85a2'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            heart.style.backgroundColor = randomColor;
+            
+            // Передаем цвет напрямую в переменную стиля элемента
+            heart.style.setProperty('--heart-color', randomColor);
 
-            // Случайное положение по горизонтали (от 5% до 90% ширины экрана)
-            const randomX = Math.floor(Math.random() * 85) + 5;
+            const randomX = Math.floor(Math.random() * 80) + 5;
             heart.style.left = randomX + '%';
 
-            // Случайный размер сердечка (от маленьких до крупных)
-            const randomScale = (Math.random() * 0.6) + 0.7; // масштаб от 0.7 до 1.3
+            const randomScale = (Math.random() * 0.5) + 0.7; 
             heart.style.transform = `scale(${randomScale})`;
 
-            // Случайная скорость полета (от 3 до 5 секунд)
             const randomDuration = (Math.random() * 2) + 3;
             heart.style.animationDuration = randomDuration + 's';
 
-            // ОБРАБОТКА ТАПА (ЛОПАНИЕ)
-            // Используем и то, и другое для идеального отклика на ПК и планшетах
+            // Лопание по клику/тапу
             const popEvent = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 heart.classList.add('popped');
-                
-                // Удаляем элемент из памяти после завершения эффекта лопанья
-                setTimeout(() => {
-                    heart.remove();
-                }, 1500);
+                setTimeout(() => { heart.remove(); }, 200);
             };
 
             heart.addEventListener('mousedown', popEvent);
-            heart.addEventListener('touchstart', popEvent);
+            heart.addEventListener('touchstart', popEvent, { passive: false });
 
-            // Если ребенок не поймал сердечко, удаляем его, когда оно улетело за верхний край
-            heart.addEventListener('animationend', () => {
-                heart.remove();
-            });
+            heart.addEventListener('animationend', () => { heart.remove(); });
 
             document.body.appendChild(heart);
         }
