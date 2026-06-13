@@ -13,12 +13,12 @@
             padding: 10px;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden; /* Запрещаем прокрутку */
+            overflow: hidden; /* Запрещаем прокрутку, чтобы ничего не дёргалось */
             position: relative;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start; /* Выравниваем всё сверху вниз */
             align-items: center;
             box-sizing: border-box;
         }
@@ -26,8 +26,8 @@
         /* Верхняя панель */
         .header-area {
             flex-shrink: 0;
-            margin-bottom: 5px;
             width: 100%;
+            margin-bottom: 5px;
         }
         h1 { font-size: 20px; color: #333; margin: 5px 0 2px 0; }
         p { font-size: 13px; color: #666; margin: 0 0 5px 0; }
@@ -47,53 +47,7 @@
             transition: opacity 0.5s;
         }
 
-        /* Игровой холст (Фиксированный квадрат под любые экраны) */
-        .canvas-container {
-            background: white;
-            padding: 10px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            position: relative;
-            transition: opacity 0.5s ease;
-            
-            /* Магия адаптивности: холст подстроится под узкие и широкие экраны */
-            width: 320px;
-            height: 320px;
-        }
-        @media (min-height: 600px) {
-            .canvas-container {
-                width: 360px;
-                height: 360px;
-            }
-        }
-        @media (min-height: 750px) {
-            .canvas-container {
-                width: 400px;
-                height: 400px;
-            }
-        }
-
-        svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 10px;
-        }
-        
-        .paintable {
-            fill: #ffffff;
-            stroke: #2c3e50;
-            stroke-width: 3;
-            stroke-linejoin: round;
-            stroke-linecap: round;
-            cursor: pointer;
-            transition: fill 0.2s ease;
-        }
-        .paintable:hover {
-            filter: brightness(0.97);
-        }
-
-        /* Палитра (Снизу) */
+        /* Палитра (ТЕПЕРЬ ВВЕРХУ, ПОД ТЕКСТОМ) */
         .palette {
             display: flex;
             justify-content: center;
@@ -104,8 +58,8 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 10px;
             border-radius: 20px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
-            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
             flex-shrink: 0;
             transition: opacity 0.5s ease;
         }
@@ -123,7 +77,55 @@
             border-color: #333;
         }
 
-        /* Анимация кота */
+        /* Игровой холст (По центру, под палитрой) */
+        .canvas-container {
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
+            transition: opacity 0.5s ease;
+            flex-shrink: 0;
+            
+            /* Размеры холста плавно адаптируются под высоту экрана */
+            width: 300px;
+            height: 300px;
+        }
+        @media (min-height: 600px) {
+            .canvas-container {
+                width: 340px;
+                height: 340px;
+            }
+        }
+        @media (min-height: 700px) {
+            .canvas-container {
+                width: 380px;
+                height: 380px;
+            }
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 10px;
+        }
+        
+        /* Элементы раскраски */
+        .paintable {
+            fill: #ffffff;
+            stroke: #2c3e50;
+            stroke-width: 3;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            cursor: pointer;
+            transition: fill 0.2s ease;
+        }
+        .paintable:hover {
+            filter: brightness(0.97);
+        }
+
+        /* Анимация уходящего кота */
         #the-cat {
             transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
             transform-origin: bottom center;
@@ -134,6 +136,7 @@
             pointer-events: none;
         }
 
+        /* По умолчанию скрываем ракету */
         #level-2 { display: none; }
 
         /* Сердечки */
@@ -180,6 +183,22 @@
         <div id="score-counter">Поймано сердечек: <span id="score">0</span> / 50</div>
     </div>
 
+    <div class="palette" id="main-palette">
+        <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
+        <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
+        <div class="color-circle" style="background: #ff9f1c;" data-color="#ff9f1c"></div>
+        <div class="color-circle" style="background: #ffeb3b;" data-color="#ffeb3b"></div>
+        <div class="color-circle" style="background: #4ecc6e;" data-color="#4ecc6e"></div>
+        <div class="color-circle" style="background: #20b2aa;" data-color="#20b2aa"></div>
+        <div class="color-circle" style="background: #00b4d8;" data-color="#00b4d8"></div>
+        <div class="color-circle" style="background: #0077b6;" data-color="#0077b6"></div>
+        <div class="color-circle" style="background: #7209b7;" data-color="#7209b7"></div>
+        <div class="color-circle" style="background: #b5179e;" data-color="#b5179e"></div>
+        <div class="color-circle" style="background: #d4a373;" data-color="#d4a373"></div>
+        <div class="color-circle" style="background: #4a4a4a;" data-color="#4a4a4a"></div>
+        <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
+    </div>
+
     <div class="canvas-container" id="painting-canvas">
         
         <svg viewBox="0 0 400 400" id="level-1">
@@ -220,39 +239,31 @@
 
     </div>
 
-    <div class="palette" id="main-palette">
-        <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
-        <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
-        <div class="color-circle" style="background: #ff9f1c;" data-color="#ff9f1c"></div>
-        <div class="color-circle" style="background: #ffeb3b;" data-color="#ffeb3b"></div>
-        <div class="color-circle" style="background: #4ecc6e;" data-color="#4ecc6e"></div>
-        <div class="color-circle" style="background: #20b2aa;" data-color="#20b2aa"></div>
-        <div class="color-circle" style="background: #00b4d8;" data-color="#00b4d8"></div>
-        <div class="color-circle" style="background: #0077b6;" data-color="#0077b6"></div>
-        <div class="color-circle" style="background: #7209b7;" data-color="#7209b7"></div>
-        <div class="color-circle" style="background: #b5179e;" data-color="#b5179e"></div>
-        <div class="color-circle" style="background: #d4a373;" data-color="#d4a373"></div>
-        <div class="color-circle" style="background: #4a4a4a;" data-color="#4a4a4a"></div>
-        <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
-    </div>
-
     <script>
         let selectedColor = '#ff4d6d';
         let gameActive = false;
         let heartInterval;
         let score = 0;
 
-        // Выбор цвета
-        const colorCircles = document.querySelectorAll('.color-circle');
-        colorCircles.forEach(circle => {
-            circle.addEventListener('click', (e) => {
-                colorCircles.forEach(c => c.classList.remove('active'));
-                e.currentTarget.classList.add('active');
-                selectedColor = e.currentTarget.getAttribute('data-color');
-            });
+        // Ждем полной загрузки HTML структуры, чтобы ничего не ломалось
+        document.addEventListener("DOMContentLoaded", () => {
+            initPalette();
+            initPainting();
         });
 
-        // Покраска
+        // Инициализация кликов по палитре
+        function initPalette() {
+            const colorCircles = document.querySelectorAll('.color-circle');
+            colorCircles.forEach(circle => {
+                circle.addEventListener('click', (e) => {
+                    colorCircles.forEach(c => c.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    selectedColor = e.currentTarget.getAttribute('data-color');
+                });
+            });
+        }
+
+        // Настройка раскрашивания элементов
         function initPainting() {
             const paintableElements = document.querySelectorAll('.paintable');
             paintableElements.forEach(element => {
@@ -262,15 +273,14 @@
         }
 
         function handlePaint(e) {
+            e.preventDefault();
             e.target.style.fill = selectedColor;
             if (e.target.classList.contains('cat-part')) {
                 checkCatStatus();
             }
         }
 
-        initPainting();
-
-        // Проверка кота
+        // Проверка готовности кота
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
@@ -291,7 +301,7 @@
             }
         }
 
-        // Игра в сердечки
+        // Включение игры в сердечки
         function startHeartGame() {
             gameActive = true;
             score = 0;
@@ -321,4 +331,62 @@
             heart.classList.add('heart');
 
             const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ba55d3', '#ff4500', '#ff85a2'];
-            const randomColor = colors[7 % colors.length]; // Используем остаток от деления для
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.setProperty('--heart-color', randomColor);
+
+            const randomX = Math.floor(Math.random() * 80) + 5;
+            heart.style.left = randomX + '%';
+
+            const randomScale = (Math.random() * 0.4) + 0.7; 
+            heart.style.transform = `scale(${randomScale})`;
+
+            const randomDuration = (Math.random() * 1.5) + 2.5;
+            heart.style.animationDuration = randomDuration + 's';
+
+            const popEvent = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                heart.classList.add('popped');
+                
+                score++;
+                document.getElementById('score').innerText = score;
+
+                if (score >= 50 && gameActive) {
+                    endHeartGame();
+                }
+
+                setTimeout(() => { heart.remove(); }, 200);
+            };
+
+            heart.addEventListener('mousedown', popEvent);
+            heart.addEventListener('touchstart', popEvent, { passive: false });
+            heart.addEventListener('animationend', () => { heart.remove(); });
+
+            document.body.appendChild(heart);
+        }
+
+        // Переход на Уровень 2 (Ракета)
+        function endHeartGame() {
+            gameActive = false;
+            clearInterval(heartInterval);
+            document.querySelectorAll('.heart').forEach(h => h.remove());
+
+            document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета! 🌟";
+            document.getElementById('game-instruction').innerHTML = "Ты собрал все сердечки! Раскрась ракету!";
+            
+            document.getElementById('score-counter').style.display = 'none';
+            document.getElementById('level-2').style.display = 'block';
+            document.getElementById('main-palette').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('main-palette').style.opacity = '1';
+                document.getElementById('painting-canvas').style.opacity = '1';
+            }, 50);
+
+            // Снова активируем покраску для новых элементов
+            initPainting();
+        }
+    </script>
+
+</body>
+</html>
