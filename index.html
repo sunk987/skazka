@@ -23,43 +23,32 @@
             overflow: hidden;
             position: relative;
         }
-        
-        /* Летающие сердечки - ТЕПЕРЬ ПОВЕРХ ВСЕГО */
         .heart {
             position: absolute;
             cursor: pointer;
-            z-index: 9999; /* Самый высокий приоритет, чтобы быть над кнопками */
+            z-index: 9999;
             font-size: 40px;
             animation: floatUp 5s linear infinite;
             transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-            /* Делаем область клика чуть больше, чтобы ребёнку было легче попасть */
             padding: 10px; 
             touch-action: manipulation;
         }
-        
-        /* Эффект при клике / тапе (лопанье) */
         .heart.pop {
             transform: scale(1.6);
             opacity: 0;
         }
-
         @keyframes floatUp {
             0% {
                 transform: translateY(105vh) scale(0.8) rotate(0deg);
                 opacity: 0;
             }
-            15% {
-                opacity: 0.8;
-            }
-            85% {
-                opacity: 0.8;
-            }
+            15% { opacity: 0.8; }
+            85% { opacity: 0.8; }
             100% {
                 transform: translateY(-10vh) scale(1.2) rotate(20deg);
                 opacity: 0;
             }
         }
-
         #game-container {
             background: rgba(255, 255, 255, 0.9);
             padding: 35px 25px;
@@ -92,4 +81,128 @@
             border-radius: 22px;
             cursor: pointer;
             transition: transform 0.1s;
-            box-shadow: 0 8px 20px rgba
+            box-shadow: 0 8px 20px rgba(255, 107, 139, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: bold;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn-blue {
+            background: #4dadf7;
+            box-shadow: 0 8px 20px rgba(77, 173, 247, 0.35);
+        }
+        #restart-btn {
+            background: #66bb6a;
+            font-size: 22px;
+            margin-top: 25px;
+            display: none;
+            box-shadow: 0 8px 20px rgba(102, 187, 106, 0.4);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="text">Загрузка сказки...</div>
+    <div class="btn-container" id="choices"></div>
+    <button class="btn" id="restart-btn" onclick="startGame()">✨ Играть снова</button>
+</div>
+
+<script>
+    const story = {
+        start: {
+            text: "🐕 Маноэль нашёл золотой ключ! Куда мы пойдём?",
+            choices: [
+                { text: "🌲 В сказочный лес", next: "forest", icon: "🌲" },
+                { text: "🏰 К большому замку", next: "castle", icon: "🏰" }
+            ]
+        },
+        forest: {
+            text: "🪄 В лесу танцует добрая Фея!",
+            choices: [
+                { text: "💃 Потанцевать с ней", next: "river", icon: "💃" },
+                { text: "🍎 Дать ей яблоко", next: "river", icon: "🍎" }
+            ]
+        },
+        castle: {
+            text: "🚗 У замка стоит Заяц на машинке!",
+            choices: [
+                { text: "🚙 Поехать с ним", next: "river", icon: "🚙" },
+                { text: "🥕 Дать ему морковку", next: "river", icon: "🥕" }
+            ]
+        },
+        river: {
+            text: "🌊 Впереди большая река! Как пройти?",
+            choices: [
+                { text: "🪵 Построить мостик", next: "final", icon: "🪵" },
+                { text: "🛶 Плыть на лодке", next: "final", icon: "🛶" }
+            ]
+        },
+        final: {
+            text: "🎉 Ура! Ключ подошёл! Шкатулка открылась! Ты победила! 🎁",
+            choices: []
+        }
+    };
+
+    function startGame() {
+        document.getElementById('restart-btn').style.display = 'none';
+        showNode('start');
+    }
+
+    function showNode(nodeId) {
+        const node = story[nodeId];
+        document.getElementById('text').innerText = node.text;
+        const choicesContainer = document.getElementById('choices');
+        choicesContainer.innerHTML = '';
+
+        if (node.choices.length === 0) {
+            document.getElementById('restart-btn').style.display = 'block';
+            return;
+        }
+
+        node.choices.forEach((choice, index) => {
+            const button = document.createElement('button');
+            button.className = `btn ${index % 2 === 1 ? 'btn-blue' : ''}`;
+            button.innerHTML = `<span>${choice.icon}</span> ${choice.text}`;
+            button.onclick = () => showNode(choice.next);
+            choicesContainer.appendChild(button);
+        });
+    }
+
+    function createHearts() {
+        const heartIcons = ['❤️', '💖', '💝', '💕', '💗'];
+        setInterval(() => {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+            heart.style.left = Math.random() * 80 + 'vw'; 
+            const size = Math.random() * 15 + 35;
+            heart.style.fontSize = size + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+
+            const popHeart = (e) => {
+                e.stopPropagation();
+                heart.classList.add('pop');
+                setTimeout(() => { heart.remove(); }, 100);
+            };
+
+            heart.addEventListener('mousedown', popHeart);
+            heart.addEventListener('touchstart', popHeart);
+            
+            document.body.appendChild(heart);
+            
+            setTimeout(() => { if (heart) heart.remove(); }, 7000);
+        }, 500);
+    }
+
+    startGame();
+    createHearts();
+</script>
+
+</body>
+</html>
