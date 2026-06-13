@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Волшебная Раскраска-Игра</title>
+    <title>Волшебная Раскраска: Уровни</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -13,7 +13,7 @@
             padding: 20px;
             user-select: none;
             -webkit-user-select: none;
-            overflow: hidden; /* Важно, чтобы не дергался экран от сердечек */
+            overflow: hidden;
             position: relative;
             min-height: 100vh;
             box-sizing: border-box;
@@ -21,6 +21,22 @@
         h1 { color: #333; margin-bottom: 5px; }
         p { color: #666; margin-top: 0; margin-bottom: 20px; }
         
+        /* Счётчик сердечек */
+        #score-counter {
+            display: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4d6d;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: inline-block;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
         /* Палитра */
         .palette {
             display: flex;
@@ -91,7 +107,12 @@
             pointer-events: none;
         }
 
-        /* --- СЕРДЕЧКИ (ИСПРАВЛЕННЫЙ ВАРИАНТ) --- */
+        /* Скрытые элементы по умолчанию (Уровень 2) */
+        #level-2 {
+            display: none;
+        }
+
+        /* Сердечки */
         .heart {
             position: absolute;
             width: 60px;
@@ -102,8 +123,6 @@
             animation: flyUp 4s linear forwards;
             transition: transform 0.15s ease, opacity 0.15s ease;
         }
-
-        /* Теперь цвет передается напрямую через CSS-переменную, никаких inherit */
         .heart::before, .heart::after {
             content: "";
             position: absolute;
@@ -111,29 +130,15 @@
             width: 32px;
             height: 50px;
             border-radius: 32px 32px 0 0;
-            background: var(--heart-color); /* Жестко заданный цвет */
+            background: var(--heart-color);
         }
-        .heart::before {
-            left: 32px;
-            transform: rotate(-45deg);
-            transform-origin: 0 100%;
-        }
-        .heart::after {
-            left: 0;
-            transform: rotate(45deg);
-            transform-origin: 100% 100%;
-        }
+        .heart::before { left: 32px; transform: rotate(-45deg); transform-origin: 0 100%; }
+        .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
 
         @keyframes flyUp {
-            0% {
-                transform: translateY(0) translateX(0) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-50vh) translateX(30px) rotate(8deg);
-            }
-            100% {
-                transform: translateY(-120vh) translateX(-30px) rotate(-8deg);
-            }
+            0% { transform: translateY(0) translateX(0) rotate(0deg); }
+            50% { transform: translateY(-50vh) translateX(30px) rotate(8deg); }
+            100% { transform: translateY(-120vh) translateX(-30px) rotate(-8deg); }
         }
 
         .heart.popped {
@@ -146,8 +151,10 @@
 </head>
 <body>
 
-    <h1 id="game-title">🐱 Кот, который гуляет сам по себе 🎨</h1>
-    <p id="game-instruction">Раскрась котика полностью, чтобы активировать магию!</p>
+    <h1 id="game-title">🐱 Уровень 1: Волшебный Кот 🎨</h1>
+    <p id="game-instruction">Раскрась котика полностью, чтобы открыть секретную игру!</p>
+
+    <div id="score-counter">Поймано сердечек: <span id="score">0</span> / 50</div>
 
     <div class="palette" id="main-palette">
         <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
@@ -166,7 +173,8 @@
     </div>
 
     <div class="canvas-container" id="painting-canvas">
-        <svg viewBox="0 0 400 400">
+        
+        <svg viewBox="0 0 400 400" id="level-1">
             <rect x="0" y="0" width="400" height="400" class="paintable" />
             <polygon points="60,50 65,65 80,65 67,75 72,90 60,80 48,90 53,75 40,65 55,65" class="paintable" />
             <polygon points="320,50 323,60 335,60 325,67 328,78 320,70 312,78 315,67 305,60 317,60" class="paintable" />
@@ -187,14 +195,30 @@
                 <polygon points="180,165 176,170 184,170" fill="#ff758f" />
             </g>
         </svg>
+
+        <svg viewBox="0 0 400 400" id="level-2">
+            <rect x="0" y="0" width="400" height="400" class="paintable" />
+            <circle cx="70" cy="80" r="35" class="paintable" />
+            <path d="M 30 85 Q 70 105 110 85" fill="none" stroke="#2c3e50" stroke-width="3" /> <circle cx="330" cy="300" r="25" class="paintable" />
+            <polygon points="320,70 323,77 332,77 325,82 327,90 320,85 313,90 315,82 308,77 317,77" class="paintable" />
+            <polygon points="80,280 83,287 92,287 85,292 87,300 80,295 73,300 75,292 68,287 77,287" class="paintable" />
+            
+            <path d="M 200 80 C 230 140, 240 240, 240 280 L 160 280 C 160 240, 170 140, 200 80 Z" class="paintable" />
+            <circle cx="200" cy="180" r="22" class="paintable" />
+            <path d="M 160 240 L 120 280 L 160 280 Z" class="paintable" />
+            <path d="M 240 240 L 280 280 L 240 280 Z" class="paintable" />
+            <polygon points="180,285 200,330 220,285 210,300 200,285 190,300" class="paintable" />
+        </svg>
+
     </div>
 
     <script>
         let selectedColor = '#ff4d6d';
         let gameActive = false;
         let heartInterval;
+        let score = 0;
 
-        // Выбор цвета
+        // Выбор цвета в палитре
         const colorCircles = document.querySelectorAll('.color-circle');
         colorCircles.forEach(circle => {
             circle.addEventListener('click', (e) => {
@@ -204,18 +228,27 @@
             });
         });
 
-        // Покраска
-        const paintableElements = document.querySelectorAll('.paintable');
-        paintableElements.forEach(element => {
-            element.addEventListener('click', (e) => {
-                e.target.style.fill = selectedColor;
-                if (e.target.classList.contains('cat-part')) {
-                    checkCatStatus();
-                }
+        // Функция покраски элементов (работает для обеих картинок)
+        function initPainting() {
+            const paintableElements = document.querySelectorAll('.paintable');
+            paintableElements.forEach(element => {
+                // Сначала убираем старый слушатель, чтобы не дублировать
+                element.removeEventListener('click', handlePaint);
+                element.addEventListener('click', handlePaint);
             });
-        });
+        }
 
-        // Проверка кота
+        function handlePaint(e) {
+            e.target.style.fill = selectedColor;
+            if (e.target.classList.contains('cat-part')) {
+                checkCatStatus();
+            }
+        }
+
+        // Запуск при старте страницы
+        initPainting();
+
+        // Проверка готовности кота (Уровень 1)
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
@@ -236,35 +269,40 @@
             }
         }
 
-        // Старт игры
+        // СТАДИЯ 2: ИГРА В СЕРДЕЧКИ
         function startHeartGame() {
             gameActive = true;
+            score = 0;
+            document.getElementById('score').innerText = score;
             
-            document.getElementById('game-title').innerHTML = "❤️ Поймай все сердечки! ✨";
-            document.getElementById('game-instruction').innerHTML = "Тапай по сердечкам пальчиком, чтобы они лопались!";
+            document.getElementById('game-title').innerHTML = "❤️ Поймай 50 сердечек! ✨";
+            document.getElementById('game-instruction').innerHTML = "Лопай сердечки тапами, чтобы открыть супер-уровень!";
             
+            // Показываем счетчик
+            const counterDiv = document.getElementById('score-counter');
+            counterDiv.style.opacity = '1';
+
+            // Прячем палитру и раскраску кота
             document.getElementById('main-palette').style.opacity = '0';
             document.getElementById('painting-canvas').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('main-palette').style.display = 'none';
-                document.getElementById('painting-canvas').style.display = 'none';
-            }, 800);
+                document.getElementById('level-1').style.display = 'none'; // Отключаем кота
+            }, 600);
 
-            heartInterval = setInterval(createHeart, 450);
+            // Интервал вылета сердечек
+            heartInterval = setInterval(createHeart, 400);
         }
 
-        // Создание сердечка
+        // Отрисовка летящего сердечка
         function createHeart() {
             if (!gameActive) return;
 
             const heart = document.createElement('div');
             heart.classList.add('heart');
 
-            // Палитра цветов для сердечек
             const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ba55d3', '#ff4500', '#ff85a2'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            
-            // Передаем цвет напрямую в переменную стиля элемента
             heart.style.setProperty('--heart-color', randomColor);
 
             const randomX = Math.floor(Math.random() * 80) + 5;
@@ -273,23 +311,61 @@
             const randomScale = (Math.random() * 0.5) + 0.7; 
             heart.style.transform = `scale(${randomScale})`;
 
-            const randomDuration = (Math.random() * 2) + 3;
+            const randomDuration = (Math.random() * 2) + 2.5; // Чуть быстрее летят
             heart.style.animationDuration = randomDuration + 's';
 
-            // Лопание по клику/тапу
+            // Клик по сердечку
             const popEvent = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 heart.classList.add('popped');
+                
+                // Начисляем очки
+                score++;
+                document.getElementById('score').innerText = score;
+
+                // ПРОВЕРКА ПОБЕДЫ: Набрали 50 очков?
+                if (score >= 50 && gameActive) {
+                    endHeartGame();
+                }
+
                 setTimeout(() => { heart.remove(); }, 200);
             };
 
             heart.addEventListener('mousedown', popEvent);
             heart.addEventListener('touchstart', popEvent, { passive: false });
-
             heart.addEventListener('animationend', () => { heart.remove(); });
 
             document.body.appendChild(heart);
+        }
+
+        // СТАДИЯ 3: ПЕРЕХОД НА ВТОРОЙ УРОВЕНЬ
+        function endHeartGame() {
+            gameActive = false;
+            clearInterval(heartInterval); // Стоп вылету сердечек
+            
+            // Удаляем все оставшиеся на экране сердечки
+            document.querySelectorAll('.heart').forEach(h => h.remove());
+
+            // Меняем интерфейс на Космический уровень
+            document.getElementById('game-title').innerHTML = "🚀 Уровень 2: Ракета в космосе! 🌟";
+            document.getElementById('game-instruction').innerHTML = "Ура! Ты собрал все сердечки! Раскрась космический корабль!";
+            
+            // Прячем счётчик
+            document.getElementById('score-counter').style.display = 'none';
+
+            // Включаем вторую раскраску
+            document.getElementById('level-2').style.display = 'block';
+            
+            // Плавно возвращаем холст и палитру
+            document.getElementById('main-palette').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('main-palette').style.opacity = '1';
+                document.getElementById('painting-canvas').style.opacity = '1';
+            }, 100);
+
+            // Переинициализируем покраску для новых элементов ракеты
+            initPainting();
         }
     </script>
 
