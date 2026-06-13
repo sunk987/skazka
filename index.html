@@ -3,220 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Волшебное приключение</title>
+    <title>Моя Раскраска</title>
     <style>
-        * {
-            box-sizing: border-box;
-            /* Убираем синюю/серую рамку-подсветку при нажатии на мобильных устройствах */
-            -webkit-tap-highlight-color: transparent;
-        }
         body {
-            background: linear-gradient(135deg, #ffe6f2 0%, #b3dbff 100%);
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
             margin: 0;
             padding: 20px;
-            text-align: center;
-            user-select: none;
-            overflow: hidden;
-            position: relative;
         }
-        .heart {
-            position: absolute;
-            cursor: pointer;
-            z-index: 9999;
-            font-size: 40px;
-            animation: floatUp 5s linear infinite;
-            /* Плавный переход для эффекта лопанья */
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease-out;
-            padding: 15px; 
-            touch-action: manipulation;
-            display: inline-block;
-        }
+        h1 { color: #333; }
         
-        /* Эффект красивого лопанья */
-        .heart.pop {
-            transform: scale(2.2) rotate(15deg);
-            opacity: 0;
-            filter: blur(2px);
-        }
-        
-        @keyframes floatUp {
-            0% {
-                transform: translateY(105vh) scale(0.8) rotate(0deg);
-                opacity: 0;
-            }
-            15% { opacity: 0.8; }
-            85% { opacity: 0.8; }
-            100% {
-                transform: translateY(-10vh) scale(1.2) rotate(20deg);
-                opacity: 0;
-            }
-        }
-        #game-container {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 35px 25px;
-            border-radius: 35px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
-            backdrop-filter: blur(8px);
-            z-index: 10;
-            border: 3px solid #fff;
-        }
-        #text {
-            font-size: 32px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 35px;
-            line-height: 1.4;
-        }
-        .btn-container {
+        /* Палитра */
+        .palette {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .btn {
-            background: #ff6b8b;
-            color: white;
-            border: none;
-            padding: 22px;
-            font-size: 24px;
-            border-radius: 22px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            box-shadow: 0 8px 20px rgba(255, 107, 139, 0.35);
-            display: flex;
-            align-items: center;
             justify-content: center;
             gap: 15px;
-            font-weight: bold;
+            margin-bottom: 20px;
         }
-        .btn:active {
-            transform: scale(0.95);
+        .color-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
         }
-        .btn-blue {
-            background: #4dadf7;
-            box-shadow: 0 8px 20px rgba(77, 173, 247, 0.35);
+        .color-circle:hover, .color-circle.active {
+            transform: scale(1.15);
+            border-color: #333;
         }
-        #restart-btn {
-            background: #66bb6a;
-            font-size: 22px;
-            margin-top: 25px;
-            display: none;
-            box-shadow: 0 8px 20px rgba(102, 187, 106, 0.4);
-            width: 100%;
+
+        /* Контейнер для картинки */
+        .canvas-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Стили для SVG (картинки) */
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Элементы, которые можно красить, должны иметь этот класс */
+        .paintable {
+            fill: #ffffff;
+            stroke: #000000;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: fill 0.3s;
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="text">Загрузка сказки...</div>
-    <div class="btn-container" id="choices"></div>
-    <button class="btn" id="restart-btn" onclick="startGame()">✨ Играть снова</button>
-</div>
+    <h1>🎨 Моя первая раскраска 🖌️</h1>
 
-<script>
-    const story = {
-        start: {
-            text: "🐕 Маноэль нашёл золотой ключ! Куда мы пойдём?",
-            choices: [
-                { text: "🌲 В сказочный лес", next: "forest", icon: "🌲" },
-                { text: "🏰 К большому замку", next: "castle", icon: "🏰" }
-            ]
-        },
-        forest: {
-            text: "🪄 В лесу танцует добрая Фея!",
-            choices: [
-                { text: "💃 Потанцевать с ней", next: "river", icon: "💃" },
-                { text: "🍎 Дать ей яблоко", next: "river", icon: "🍎" }
-            ]
-        },
-        castle: {
-            text: "🚗 У замка стоит Заяц на машинке!",
-            choices: [
-                { text: "🚙 Поехать с ним", next: "river", icon: "🚙" },
-                { text: "🥕 Дать ему морковку", next: "river", icon: "🥕" }
-            ]
-        },
-        river: {
-            text: "🌊 Впереди большая река! Как пройти?",
-            choices: [
-                { text: "🪵 Построить мостик", next: "final", icon: "🪵" },
-                { text: "🛶 Плыть на лодке", next: "final", icon: "🛶" }
-            ]
-        },
-        final: {
-            text: "🎉 Ура! Ключ подошёл! Шкатулка открылась! Ты победила! 🎁",
-            choices: []
-        }
-    };
+    <!-- Палитра цветов -->
+    <div class="palette">
+        <div class="color-circle active" style="background: #ff4d4d;" data-color="#ff4d4d"></div>
+        <div class="color-circle" style="background: #4da6ff;" data-color="#4da6ff"></div>
+        <div class="color-circle" style="background: #ffff4d;" data-color="#ffff4d"></div>
+        <div class="color-circle" style="background: #5cd65c;" data-color="#5cd65c"></div>
+        <div class="color-circle" style="background: #ff944d;" data-color="#ff944d"></div>
+        <div class="color-circle" style="background: #b366ff;" data-color="#b366ff"></div>
+        <div class="color-circle" style="background: #ffffff;" data-color="#ffffff"></div> <!-- Стиралка -->
+    </div>
 
-    function startGame() {
-        document.getElementById('restart-btn').style.display = 'none';
-        showNode('start');
-    }
+    <!-- Контейнер с векторной картинкой (сейчас тут простой домик) -->
+    <div class="canvas-container">
+        <svg width="400" height="400" viewBox="0 0 400 400">
+            <!-- Небо / Фон (не красится) -->
+            <rect width="400" height="400" fill="#fafafa" stroke="#ccc"/>
+            
+            <!-- Крыша (красится) -->
+            <polygon points="200,50 50,180 350,180" class="paintable" />
+            
+            <!-- Стены дома (красится) -->
+            <rect x="80" y="180" width="240" height="170" class="paintable" />
+            
+            <!-- Окно (красится) -->
+            <rect x="150" y="220" width="100" height="80" class="paintable" />
+            
+            <!-- Труба (красится) -->
+            <polygon points="280,75 280,120 310,120 310,100" class="paintable" />
+        </svg>
+    </div>
 
-    function showNode(nodeId) {
-        const node = story[nodeId];
-        document.getElementById('text').innerText = node.text;
-        const choicesContainer = document.getElementById('choices');
-        choicesContainer.innerHTML = '';
+    <script>
+        // Текущий выбранный цвет (по умолчанию красный)
+        let selectedColor = '#ff4d4d';
 
-        if (node.choices.length === 0) {
-            document.getElementById('restart-btn').style.display = 'block';
-            return;
-        }
-
-        node.choices.forEach((choice, index) => {
-            const button = document.createElement('button');
-            button.className = `btn ${index % 2 === 1 ? 'btn-blue' : ''}`;
-            button.innerHTML = `<span>${choice.icon}</span> ${choice.text}`;
-            button.onclick = () => showNode(choice.next);
-            choicesContainer.appendChild(button);
+        // Выбор цвета в палитре
+        const colorCircles = document.querySelectorAll('.color-circle');
+        colorCircles.forEach(circle => {
+            circle.addEventListener('click', (e) => {
+                // Убираем активный класс у всех
+                colorCircles.forEach(c => c.classList.remove('active'));
+                // Добавляем текущему
+                e.target.classList.add('active');
+                // Меняем цвет
+                selectedColor = e.target.getAttribute('data-color');
+            });
         });
-    }
 
-    function createHearts() {
-        const heartIcons = ['❤️', '💖', '💝', '💕', '💗'];
-        setInterval(() => {
-            const heart = document.createElement('div');
-            heart.className = 'heart';
-            heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
-            heart.style.left = Math.random() * 80 + 'vw'; 
-            const size = Math.random() * 15 + 35;
-            heart.style.fontSize = size + 'px';
-            heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-
-            const popHeart = (e) => {
-                e.preventDefault(); // Предотвращаем стандартные мобильные эффекты задержки тапа
-                e.stopPropagation();
-                
-                // Если сердечко уже лопается, повторно не обрабатываем
-                if(heart.classList.contains('pop')) return;
-                
-                heart.classList.add('pop');
-                setTimeout(() => { heart.remove(); }, 200); // Чуть увеличили время, чтобы анимация успела проиграться
-            };
-
-            // Используем touchstart для мгновенной реакции на смартфонах без задержек
-            heart.addEventListener('touchstart', popHeart, {passive: false});
-            heart.addEventListener('mousedown', popHeart);
-            
-            document.body.appendChild(heart);
-            
-            setTimeout(() => { if (heart && !heart.classList.contains('pop')) heart.remove(); }, 7000);
-        }, 500);
-    }
-
-    startGame();
-    createHearts();
-</script>
+        // Раскрашивание элементов
+        const paintableElements = document.querySelectorAll('.paintable');
+        paintableElements.forEach(element => {
+            element.addEventListener('click', (e) => {
+                e.target.style.fill = selectedColor;
+            });
+        });
+    </script>
 
 </body>
 </html>
