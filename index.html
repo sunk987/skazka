@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Волшебная Раскраска с секретом</title>
+    <title>Волшебная Раскраска-Игра</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -13,11 +13,15 @@
             padding: 20px;
             user-select: none;
             -webkit-user-select: none;
-            overflow-x: hidden; /* Чтобы уходящий кот не растягивал страницу */
+            overflow: hidden; /* Скрываем всё, что вылетает за границы экрана */
+            position: relative;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
         h1 { color: #333; margin-bottom: 5px; }
         p { color: #666; margin-top: 0; margin-bottom: 20px; }
         
+        /* Палитра цветов */
         .palette {
             display: flex;
             justify-content: center;
@@ -29,7 +33,9 @@
             padding: 12px;
             border-radius: 20px;
             box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transition: opacity 0.5s ease;
         }
+
         .color-circle {
             width: 45px;
             height: 45px;
@@ -44,6 +50,7 @@
             border-color: #333;
         }
 
+        /* Холст раскраски */
         .canvas-container {
             background: white;
             padding: 10px;
@@ -51,6 +58,7 @@
             display: inline-block;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             position: relative;
+            transition: opacity 0.8s ease;
         }
         svg {
             width: 100%;
@@ -73,26 +81,79 @@
             filter: brightness(0.97);
         }
 
-        /* АНИМАЦИЯ УХОДЯЩЕГО КОТА */
+        /* Анимация кота */
         #the-cat {
             transition: transform 2.5s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 2s ease;
             transform-origin: bottom center;
         }
-
-        /* Этот класс включится через JavaScript, когда кот будет раскрашен */
         .cat-walks-away {
-            transform: translateX(450px) scale(0.6); /* Кот уходит вправо и уменьшается (вдаль) */
-            opacity: 0; /* Плавно исчезает */
-            pointer-events: none; /* Больше на него нельзя нажать */
+            transform: translateX(450px) scale(0.6);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- СЕРДЕЧКИ (НОВАЯ ИГРА) --- */
+        .heart {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            bottom: -60px; /* Появляются под экраном */
+            z-index: 999;
+            animation: flyUp 4s linear forwards;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        /* Как рисуется сердечко на чистом CSS */
+        .heart::before, .heart::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            width: 26px;
+            height: 40px;
+            border-radius: 25px 25px 0 0;
+            background: inherit;
+        }
+        .heart::before {
+            left: 26px;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+        .heart::after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+
+        /* Анимация полета снизу вверх с легким покачиванием */
+        @keyframes flyUp {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-50vh) translateX(20px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(-110vh) translateX(-20px) rotate(-5deg);
+            }
+        }
+
+        /* Эффект лопанья сердечка */
+        .heart.popped {
+            animation: none;
+            transform: scale(1.6);
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>🐱 Кот, который гуляет сам по себе 🎨</h1>
-    <p>Раскрась всё небо, луну и котика полностью, и посмотри, что произойдет!</p>
+    <h1 id="game-title">🐱 Кот, который гуляет сам по себе 🎨</h1>
+    <p id="game-instruction">Раскрась котика полностью, чтобы активировать магию!</p>
 
-    <div class="palette">
+    <!-- Палитра -->
+    <div class="palette" id="main-palette">
         <div class="color-circle active" style="background: #ff4d6d;" data-color="#ff4d6d"></div>
         <div class="color-circle" style="background: #ff758f;" data-color="#ff758f"></div>
         <div class="color-circle" style="background: #ff9f1c;" data-color="#ff9f1c"></div>
@@ -105,42 +166,27 @@
         <div class="color-circle" style="background: #b5179e;" data-color="#b5179e"></div>
         <div class="color-circle" style="background: #d4a373;" data-color="#d4a373"></div>
         <div class="color-circle" style="background: #4a4a4a;" data-color="#4a4a4a"></div>
-        <div class="color-circle" style="background: #a0a0a0;" data-color="#a0a0a0"></div>
         <div class="color-circle" style="background: #ffffff; border: 3px solid #ccc;" data-color="#ffffff"></div>
     </div>
 
-    <div class="canvas-container">
+    <!-- Холст -->
+    <div class="canvas-container" id="painting-canvas">
         <svg viewBox="0 0 400 400">
-            <!-- ФОН (НЕБО) -->
             <rect x="0" y="0" width="400" height="400" class="paintable" />
-
-            <!-- ЗВЁЗДЫ -->
             <polygon points="60,50 65,65 80,65 67,75 72,90 60,80 48,90 53,75 40,65 55,65" class="paintable" />
             <polygon points="320,50 323,60 335,60 325,67 328,78 320,70 312,78 315,67 305,60 317,60" class="paintable" />
             <polygon points="70,160 73,168 81,168 74,173 76,182 70,176 64,182 66,173 59,168 67,168" class="paintable" />
-
-            <!-- ЛУНА -->
             <circle cx="230" cy="100" r="45" class="paintable" />
             <circle cx="210" cy="85" r="7" class="paintable" />
             <circle cx="245" cy="115" r="9" class="paintable" />
-
-            <!-- ЗАБОР -->
             <rect x="0" y="320" width="400" height="80" class="paintable" />
             
-            <!-- ГРУППА ПЕРСОНАЖА "КОТ" -->
             <g id="the-cat">
-                <!-- Хвост -->
                 <path d="M 130 320 C 100 320, 80 270, 100 240 C 110 230, 120 240, 115 255 C 105 275, 120 300, 145 305 Z" class="paintable cat-part" />
-                <!-- Тело -->
                 <ellipse cx="180" cy="260" rx="45" ry="60" class="paintable cat-part" />
-                <!-- Левое ухо -->
                 <polygon points="145,140 130,90 165,125" class="paintable cat-part" />
-                <!-- Правое ухо -->
                 <polygon points="215,140 230,90 195,125" class="paintable cat-part" />
-                <!-- Голова -->
                 <circle cx="180" cy="160" r="40" class="paintable cat-part" />
-                
-                <!-- Глазки и нос привязаны к голове, они уходят вместе с ней -->
                 <circle cx="165" cy="155" r="5" fill="#2c3e50" />
                 <circle cx="195" cy="155" r="5" fill="#2c3e50" />
                 <polygon points="180,165 176,170 184,170" fill="#ff758f" />
@@ -150,6 +196,8 @@
 
     <script>
         let selectedColor = '#ff4d6d';
+        let gameActive = false;
+        let heartInterval;
 
         // Выбор цвета
         const colorCircles = document.querySelectorAll('.color-circle');
@@ -161,41 +209,105 @@
             });
         });
 
-        // Покраска
+        // Покраска деталей
         const paintableElements = document.querySelectorAll('.paintable');
         paintableElements.forEach(element => {
             element.addEventListener('click', (e) => {
                 e.target.style.fill = selectedColor;
-
-                // Проверяем: если кликнули на часть кота, запускаем проверку готовности
                 if (e.target.classList.contains('cat-part')) {
                     checkCatStatus();
                 }
             });
         });
 
-        // Функция проверки: все ли части кота раскрашены?
+        // Проверка готовности кота
         function checkCatStatus() {
             const catParts = document.querySelectorAll('.cat-part');
             let allPainted = true;
 
             catParts.forEach(part => {
-                // Если у какой-то части кота fill всё еще белый (или пустой), значит он не докрашен
                 let currentFill = window.getComputedStyle(part).fill;
-                // В браузере белый цвет отображается как rgb(255, 255, 255)
                 if (currentFill === 'rgb(255, 255, 255)' || currentFill === '#ffffff') {
                     allPainted = false;
                 }
             });
 
-            // Если все 5 частей кота (хвост, тело, уши, голова) поменяли цвет с белого на любой другой
             if (allPainted) {
-                // Даем небольшую задержку в полсекунды, чтобы ребенок успел увидеть финальный цвет
                 setTimeout(() => {
                     const catGroup = document.getElementById('the-cat');
                     catGroup.classList.add('cat-walks-away');
+                    
+                    // Как только кот ушёл (через 2.5 секунды), запускаем сердечки
+                    setTimeout(startHeartGame, 2500);
                 }, 500);
             }
+        }
+
+        // ЗАПУСК ИГРЫ В СЕРДЕЧКИ
+        function startHeartGame() {
+            gameActive = true;
+            
+            // Меняем заголовки на экране
+            document.getElementById('game-title').innerHTML = "❤️ Поймай все сердечки! ✨";
+            document.getElementById('game-instruction').innerHTML = "Тапай по сердечкам пальчиком, чтобы они лопались!";
+            
+            // Плавно прячем палитру и саму раскраску, чтобы освободить место для игры
+            document.getElementById('main-palette').style.opacity = '0';
+            document.getElementById('painting-canvas').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('main-palette').style.display = 'none';
+                document.getElementById('painting-canvas').style.display = 'none';
+            }, 800);
+
+            // Начинаем создавать сердечки каждые 400 миллисекунд (очень активно)
+            heartInterval = setInterval(createHeart, 400);
+        }
+
+        // Создание одного сердечка
+        function createHeart() {
+            if (!gameActive) return;
+
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+
+            // Случайный сочный цвет для сердечка
+            const colors = ['#ff4d6d', '#ff758f', '#ff1493', '#ff69b4', '#ff85a2', '#ba55d3', '#ff4500'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.backgroundColor = randomColor;
+
+            // Случайное положение по горизонтали (от 5% до 90% ширины экрана)
+            const randomX = Math.floor(Math.random() * 85) + 5;
+            heart.style.left = randomX + '%';
+
+            // Случайный размер сердечка (от маленьких до крупных)
+            const randomScale = (Math.random() * 0.6) + 0.7; // масштаб от 0.7 до 1.3
+            heart.style.transform = `scale(${randomScale})`;
+
+            // Случайная скорость полета (от 3 до 5 секунд)
+            const randomDuration = (Math.random() * 2) + 3;
+            heart.style.animationDuration = randomDuration + 's';
+
+            // ОБРАБОТКА ТАПА (ЛОПАНИЕ)
+            // Используем и то, и другое для идеального отклика на ПК и планшетах
+            const popEvent = (e) => {
+                e.stopPropagation();
+                heart.classList.add('popped');
+                
+                // Удаляем элемент из памяти после завершения эффекта лопанья
+                setTimeout(() => {
+                    heart.remove();
+                }, 1500);
+            };
+
+            heart.addEventListener('mousedown', popEvent);
+            heart.addEventListener('touchstart', popEvent);
+
+            // Если ребенок не поймал сердечко, удаляем его, когда оно улетело за верхний край
+            heart.addEventListener('animationend', () => {
+                heart.remove();
+            });
+
+            document.body.appendChild(heart);
         }
     </script>
 
